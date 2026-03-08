@@ -1,65 +1,203 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { SummaryCards } from '@/modules/dashboard/components/SummaryCards';
+import { RecentActivity } from '@/modules/dashboard/components/RecentActivity';
+import { VoiceButton } from '@/modules/voice/components/VoiceButton';
+import { InterpretationPreview } from '@/modules/voice/components/InterpretationPreview';
+import { BottomNav } from '@/shared/ui/BottomNav';
+import { Bell, Search, LogOut, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useVoiceCapture } from '@/modules/voice/hooks/useVoiceCapture';
+import apiClient from '@/shared/lib/api-client';
 
 export default function Home() {
+  const router = useRouter();
+  const [showPreview, setShowPreview] = useState(false);
+  const [interpretation, setInterpretation] = useState<any>(null);
+  const {
+    isRecording,
+    isProcessing,
+    startRecording,
+    stopRecording,
+    processAudio,
+    playTTS,
+  } = useVoiceCapture();
+  const [user, setUser] = useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('fmic_token');
+    if (!token) {
+      router.push('/login');
+    } else {
+      const storedUser = localStorage.getItem('fmic_user');
+      if (storedUser) setUser(JSON.parse(storedUser));
+    }
+  }, [router]);
+
+  const handleVoiceToggle = async () => {
+    if (!isRecording) {
+      try {
+        await startRecording();
+      } catch (err: any) {
+        toast.error(err.message);
+      }
+    } else {
+      try {
+        const audioBlob = await stopRecording();
+        const result = await processAudio(audioBlob);
+        if (result.intent === 'UNKNOWN') {
+          toast.error("I didn't quite catch that. Try again?");
+        } else {
+          setInterpretation(result);
+          setShowPreview(true);
+        }
+      } catch (err: any) {
+        toast.error("Failed to process audio");
+      }
+    }
+  };
+
+  const [confirmedTransactions, setConfirmedTransactions] = useState<any[]>([]);
+
+  const handleConfirm = async (index: number, overrideCustomerId?: string) => {
+    const tx = interpretation.transactions[index];
+    const resolvedCustomer = tx.resolvedCustomer;
+    
+    // 0. If it's a daily summary request, just play it and move on
+    if (tx.intent === 'DAILY_SUMMARY') {
+      const newConfirmed = [...confirmedTransactions, index];
+      setConfirmedTransactions(newConfirmed);
+      
+      if (tx.voice_confirmation) {
+        await playTTS(tx.voice_confirmation);
+      }
+
+      if (newConfirmed.length === interpretation.transactions.length) {
+        setShowPreview(false);
+        setConfirmedTransactions([]);
+      }
+      return;
+    }
+
+    let finalCustomerId = overrideCustomerId || resolvedCustomer.customerId;
+
+    try {
+      // 1. If it's a new customer, create them first
+      if (resolvedCustomer.isNew && !finalCustomerId) {
+        const customerResponse = await apiClient.post('/customers', {
+          name: resolvedCustomer.name,
+          tag: resolvedCustomer.tag,
+        });
+        finalCustomerId = customerResponse.data._id;
+      }
+
+      const payload = {
+        customerId: finalCustomerId,
+        items: tx.items.map((item: any) => ({
+          productName: item.product_name,
+          productId: item.product_id,
+          quantity: item.quantity,
+          unitPriceAtSale: item.unit_price,
+        })),
+        amount: tx.amount, // Include direct amount if present
+        type: tx.transaction_type,
+        voiceTranscript: tx.reasoning_summary,
+        idempotencyKey: crypto.randomUUID(),
+      };
+      
+      await apiClient.post('/transactions', payload);
+      
+      const newConfirmed = [...confirmedTransactions, index];
+      setConfirmedTransactions(newConfirmed);
+
+      if (newConfirmed.length === interpretation.transactions.length) {
+        setShowPreview(false);
+        toast.success('All transactions saved successfully!');
+        
+        // Play TTS confirmation for the last one or a summary
+        if (tx.voice_confirmation) {
+          try {
+            await playTTS(tx.voice_confirmation);
+          } catch (ttsErr) {
+            console.warn('TTS playback failed, but transaction saved:', ttsErr);
+          }
+        }
+
+        // Short delay to ensure user registers the final state
+        setTimeout(() => {
+          window.location.reload();
+        }, 800);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save transaction');
+    }
+  };
+
+  const handleEdit = (index: number) => {
+    // Implement edit logic or redirect to a manual form
+    toast.info("Edit mode coming soon");
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('fmic_token');
+    localStorage.removeItem('fmic_user');
+    router.push('/login');
+  };
+
+  if (!user) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="w-10 h-10 animate-spin text-slate-900" />
+    </div>
+  );
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="pt-8 min-h-screen">
+      <header className="px-6 mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 leading-none tracking-tight">
+            Hello, {user.name.split(' ')[0]}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">
+            Your shop's memory is ready
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex items-center gap-2">
+          <button onClick={handleLogout} className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 text-rose-500 active:scale-95 transition-transform">
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
-      </main>
+      </header>
+
+      <SummaryCards />
+      
+      <div className="mt-10">
+        <RecentActivity />
+      </div>
+
+      <VoiceButton 
+        isRecording={isRecording} 
+        isProcessing={isProcessing}
+        onClick={handleVoiceToggle} 
+      />
+      
+      {interpretation && (
+        <InterpretationPreview 
+          isOpen={showPreview}
+          data={interpretation}
+          onConfirm={handleConfirm}
+          onCancel={() => {
+            setShowPreview(false);
+            setConfirmedTransactions([]);
+          }}
+          onEdit={handleEdit}
+          isLoading={isConfirming}
+        />
+      )}
+
+      <BottomNav />
     </div>
   );
 }
