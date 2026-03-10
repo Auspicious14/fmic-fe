@@ -15,6 +15,7 @@ import {
   Receipt,
   Share2,
   Download,
+  X,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/shared/lib/api-client";
@@ -79,20 +80,75 @@ export default function HistoryPage() {
     }
   };
 
-  const handleShareWhatsApp = async (tx: any) => {
+  const handleShareImage = async () => {
+    if (!receiptRef.current) return;
     try {
-      const res = await apiClient.get(`/transactions/${tx._id}/whatsapp`);
-      const { whatsappUrl, message } = res.data;
-      if (whatsappUrl) {
-        window.open(whatsappUrl, "_blank");
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+      });
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/png"),
+      );
+      if (!blob) throw new Error("Failed to create blob");
+
+      const file = new File(
+        [blob],
+        `receipt-${selectedTx?._id?.substring(0, 8)}.png`,
+        { type: "image/png" },
+      );
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Transaction Receipt",
+          text: "Here is your transaction receipt from FMIC.",
+        });
       } else {
-        // No phone number — copy message to clipboard
-        await navigator.clipboard.writeText(message);
-        toast.success("Receipt copied to clipboard! (No phone number on file)");
+        // Fallback for desktop/unsupported browsers
+        handleDownloadImage();
+        toast.info(
+          "Sharing files not supported on this browser. Image downloaded instead.",
+        );
       }
-    } catch {
-      toast.error("Could not generate WhatsApp link");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to share receipt image");
     }
+  };
+
+  const handleShareWhatsApp = async (tx: any) => {
+    // 1. If modal is open
+    if (showReceipt && receiptRef.current && selectedTx?._id === tx._id) {
+      await handleShareImage();
+      return;
+    }
+
+    // 2. If modal is closed, we need to fetch and render hidden
+    toast.promise(
+      async () => {
+        setSelectedTx(tx);
+        const res = await apiClient.get(
+          `/transactions/${tx._id}/receipt?format=html`,
+          { responseType: "text" },
+        );
+        const html =
+          typeof res.data === "string" ? res.data : (res.data as any).html;
+        setReceiptHtml(html);
+
+        // Wait for React to render the hidden div
+        await new Promise((r) => setTimeout(r, 500));
+
+        await handleShareImage();
+      },
+      {
+        loading: "Generating receipt image...",
+        success: "Receipt shared!",
+        error: "Failed to generate image",
+      },
+    );
   };
 
   const handleDownloadImage = async () => {
@@ -278,51 +334,65 @@ export default function HistoryPage() {
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="w-full max-w-lg bg-white rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                <h2 className="font-black text-slate-900 text-lg">
-                  Transaction Receipt
-                </h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleDownloadImage}
-                    disabled={isDownloading}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold disabled:opacity-50"
-                  >
-                    {isDownloading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                    Image
-                  </button>
-                  <button
-                    onClick={() =>
-                      selectedTx && handleShareWhatsApp(selectedTx)
-                    }
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-bold"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    WhatsApp
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowReceipt(false);
-                      setReceiptHtml("");
-                    }}
-                    className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold"
-                  >
-                    Close
-                  </button>
+              <div className="flex items-center justify-between p-6 border-b border-slate-50 bg-white">
+                <div>
+                  <h2 className="font-black text-slate-900 text-xl tracking-tight">
+                    Receipt
+                  </h2>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5">
+                    Official Record •{" "}
+                    {selectedTx?._id?.substring(0, 8).toUpperCase()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowReceipt(false);
+                    setReceiptHtml("");
+                  }}
+                  className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                  {loadingReceipt ? (
+                    <div className="flex items-center justify-center min-h-[500px]">
+                      <Loader2 className="w-8 h-8 animate-spin text-slate-200" />
+                    </div>
+                  ) : (
+                    <iframe
+                      srcDoc={receiptHtml}
+                      className="w-full min-h-[500px] border-none"
+                      title="Receipt"
+                    />
+                  )}
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                <iframe
-                  srcDoc={receiptHtml}
-                  className="w-full h-full min-h-[500px] border-none"
-                  title="Transaction Receipt"
-                />
+
+              <div className="p-6 bg-white border-t border-slate-50 flex gap-3">
+                <button
+                  onClick={handleDownloadImage}
+                  disabled={isDownloading}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-95"
+                >
+                  {isDownloading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  Download PNG
+                </button>
+                <button
+                  onClick={() => handleShareWhatsApp(selectedTx)}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-emerald-600 transition-all active:scale-95"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share Image
+                </button>
               </div>
               {/* Hidden div for image capture */}
               <div className="fixed -left-[9999px] top-0">
