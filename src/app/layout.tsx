@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'sonner';
 import QueryProvider from '@/shared/lib/query-provider';
+import { cn } from "@/shared/lib/utils";
 
-const inter = Inter({ subsets: ["latin"] });
+const syne = Syne({ subsets: ['latin']});
+const dm_sans = DM_Sans({subsets: ['latin']});
 
 export const metadata: Metadata = {
   title: "FMIC | Financial Memory",
@@ -18,12 +20,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f172a",
+  themeColor: "#0A0A0A",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
 };
+
+import { ThemeProvider } from '@/shared/lib/theme-provider';
 
 export default function RootLayout({
   children,
@@ -31,14 +35,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <QueryProvider>
-          <main className="min-h-screen bg-slate-50 pb-24 max-w-md mx-auto relative shadow-xl overflow-hidden">
-            {children}
-            <Toaster position="top-center" richColors />
-          </main>
-        </QueryProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn(syne.className, dm_sans.className)}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <QueryProvider>
+            <main className="min-h-screen bg-background text-foreground max-w-md mx-auto relative overflow-hidden border-x border-border/50">
+              {children}
+              <Toaster position="top-center" richColors />
+            </main>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

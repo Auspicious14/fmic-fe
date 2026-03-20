@@ -6,6 +6,9 @@ export interface Customer {
   phone?: string;
   outstandingBalance: number;
   lastTransactionDate?: string;
+  totalDebt: number
+  initals: string
+  tag?: string
 }
 
 export interface Product {

@@ -425,6 +425,13 @@ export default function CustomersPage() {
   const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
   const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [minDebt, setMinDebt] = useState<string>("");
+  const [maxDebt, setMaxDebt] = useState<string>("");
+  const [limit, setLimit] = useState(50);
+  const [showFilters, setShowFilters] = useState(false);
+
   const [showReceiptForTx, setShowReceiptForTx] = useState<any>(null);
   const [selectedTxForReceipt, setSelectedTxForReceipt] = useState<any>(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -526,13 +533,25 @@ export default function CustomersPage() {
     );
   };
 
-  const { data: customers, isLoading } = useQuery({
-    queryKey: ["customers"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["customers", { sortBy, sortOrder, minDebt, maxDebt, limit, search: searchQuery }],
     queryFn: async () => {
-      const response = await apiClient.get("/customers");
+      const params = new URLSearchParams({
+        sortBy,
+        sortOrder,
+        limit: limit.toString(),
+        search: searchQuery,
+      });
+      if (minDebt) params.append("minDebt", minDebt);
+      if (maxDebt) params.append("maxDebt", maxDebt);
+      
+      const response = await apiClient.get(`/customers?${params.toString()}`);
       return response.data;
     },
   });
+
+  const customers = data?.customers || [];
+  const totalCount = data?.total || 0;
 
   const { data: history, isLoading: isHistoryLoading } = useQuery({
     queryKey: ["customer-history", selectedCustomer?._id],
@@ -562,14 +581,6 @@ export default function CustomersPage() {
     },
   });
 
-  const filteredCustomers = (customers || []).filter(
-    (c: Customer) =>
-      !searchQuery ||
-      c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.phone?.includes(searchQuery) ||
-      c.tag?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   const handleReceiptView = async (tx: any) => {
     setSelectedTxForReceipt(tx);
     try {
@@ -586,32 +597,134 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="pt-8 min-h-screen bg-slate-50/50">
+    <div className="pt-8 min-h-screen bg-background">
       {/* Header */}
       <header className="px-6 mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-black text-slate-900 leading-none tracking-tight">
+        <h1 className="text-2xl font-black text-foreground leading-none tracking-tight font-syne">
           Customers
         </h1>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition-transform"
+          className="flex items-center gap-2 px-4 py-3 bg-foreground text-background rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition-transform"
         >
           <Plus className="w-4 h-4" />
           Add
         </button>
       </header>
 
-      {/* Search */}
-      <div className="px-6 mb-5">
-        <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
-          <Search className="w-5 h-5 text-slate-300 flex-shrink-0" />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search customers by name, phone…"
-            className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 text-sm font-medium outline-none"
-          />
+      {/* Search & Filter Trigger */}
+      <div className="px-6 mb-5 space-y-3">
+        <div className="flex gap-2">
+          <div className="flex-1 flex items-center gap-3 bg-surface border border-border rounded-2xl px-4 py-3 shadow-sm focus-within:border-accent/50 transition-colors">
+            <Search className="w-5 h-5 text-muted flex-shrink-0" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, phone…"
+              className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "p-3 rounded-2xl border transition-all",
+              showFilters ? "bg-accent border-accent text-background" : "bg-surface border-border text-muted"
+            )}
+          >
+            <AlertTriangle className="w-5 h-5" />
+          </button>
         </div>
+
+        {/* Filters Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-5 bg-surface border border-border rounded-3xl space-y-4 shadow-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest">Sort By</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-bold text-foreground outline-none focus:border-accent"
+                    >
+                      <option value="name">Name</option>
+                      <option value="outstandingBalance">Balance</option>
+                      <option value="createdAt">Date Joined</option>
+                      <option value="lastTransactionDate">Last Active</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest">Order</label>
+                    <div className="flex bg-background border border-border rounded-xl p-1">
+                      <button
+                        onClick={() => setSortOrder("asc")}
+                        className={cn("flex-1 py-1 text-[10px] font-black rounded-lg transition-all", sortOrder === "asc" ? "bg-accent text-background" : "text-muted")}
+                      >ASC</button>
+                      <button
+                        onClick={() => setSortOrder("desc")}
+                        className={cn("flex-1 py-1 text-[10px] font-black rounded-lg transition-all", sortOrder === "desc" ? "bg-accent text-background" : "text-muted")}
+                      >DESC</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest">Min Balance (₦)</label>
+                    <input
+                      type="number"
+                      value={minDebt}
+                      onChange={(e) => setMinDebt(e.target.value)}
+                      placeholder="0"
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-bold text-foreground outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest">Max Balance (₦)</label>
+                    <input
+                      type="number"
+                      value={maxDebt}
+                      onChange={(e) => setMaxDebt(e.target.value)}
+                      placeholder="Any"
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-bold text-foreground outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest">Show</label>
+                    <select
+                      value={limit}
+                      onChange={(e) => setLimit(Number(e.target.value))}
+                      className="bg-background border border-border rounded-lg px-2 py-1 text-[10px] font-black text-foreground outline-none"
+                    >
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSortBy("name");
+                      setSortOrder("asc");
+                      setMinDebt("");
+                      setMaxDebt("");
+                      setLimit(50);
+                    }}
+                    className="text-[10px] font-black text-accent uppercase tracking-widest"
+                  >Reset Filters</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Customer List */}
@@ -620,45 +733,51 @@ export default function CustomersPage() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-20 bg-white rounded-2xl animate-pulse border border-slate-100"
+              className="h-20 fcim-skeleton !mx-0"
             />
           ))}
         </div>
       ) : (
         <div className="px-6 space-y-3 pb-32">
-          {filteredCustomers.length === 0 ? (
-            <div className="p-10 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-              <User className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">
-                {searchQuery ? "No customers found" : "No customers yet."}
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-black text-muted uppercase tracking-widest">
+              Showing {customers.length} of {totalCount} customers
+            </p>
+          </div>
+          
+          {customers.length === 0 ? (
+            <div className="p-10 text-center bg-surface rounded-3xl border border-dashed border-border">
+              <User className="w-12 h-12 text-muted mx-auto mb-4" />
+              <p className="text-muted font-bold uppercase tracking-widest text-sm">
+                {searchQuery || minDebt || maxDebt ? "No matching customers" : "No customers yet."}
               </p>
-              {!searchQuery && (
+              {!searchQuery && !minDebt && !maxDebt && (
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="mt-4 text-slate-900 font-black underline decoration-2 underline-offset-4"
+                  className="mt-4 text-foreground font-black underline decoration-2 underline-offset-4"
                 >
                   Add your first customer
                 </button>
               )}
             </div>
           ) : (
-            filteredCustomers.map((c: Customer) => (
-              <Card
+            customers.map((c: Customer) => (
+              <div
                 key={c._id}
-                className="flex items-center justify-between p-4 active:scale-[0.98] transition-all hover:border-slate-300 cursor-pointer"
+                className="fcim-list-card !mx-0"
               >
                 <div
                   className="flex items-center gap-4 flex-1 min-w-0"
                   onClick={() => setSelectedCustomer(c)}
                 >
-                  <div className="p-3 bg-slate-50 rounded-xl text-slate-400 flex-shrink-0">
+                  <div className="p-3 bg-elevated rounded-xl text-muted flex-shrink-0">
                     <User className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-slate-900 text-base leading-none truncate">
+                    <p className="font-bold text-foreground text-base leading-none truncate">
                       {c.name}
                     </p>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    <p className="text-xs text-muted font-bold uppercase tracking-widest mt-1">
                       {c.phone || c.email || c.tag || "No contact"}
                     </p>
                   </div>
@@ -670,15 +789,15 @@ export default function CustomersPage() {
                   >
                     <p
                       className={cn(
-                        "font-black text-base leading-none",
+                        "font-black text-base leading-none font-syne",
                         c.outstandingBalance > 0
-                          ? "text-rose-600"
-                          : "text-emerald-600",
+                          ? "text-danger"
+                          : "text-success",
                       )}
                     >
                       {formatCurrency(c.outstandingBalance)}
                     </p>
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">
+                    <p className="text-[10px] text-muted uppercase font-black tracking-widest mt-1">
                       {c.outstandingBalance > 0 ? "Owed" : "Balance"}
                     </p>
                   </div>
@@ -688,7 +807,7 @@ export default function CustomersPage() {
                         e.stopPropagation();
                         setEditCustomer(c);
                       }}
-                      className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                      className="p-2 bg-elevated rounded-lg text-muted hover:text-foreground transition-colors"
                       title="Edit customer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -698,14 +817,14 @@ export default function CustomersPage() {
                         e.stopPropagation();
                         setDeleteCustomer(c);
                       }}
-                      className="p-2 bg-rose-50 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-100 transition-colors"
+                      className="p-2 bg-danger/10 rounded-lg text-danger hover:text-danger/80 transition-colors"
                       title="Delete customer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))
           )}
         </div>

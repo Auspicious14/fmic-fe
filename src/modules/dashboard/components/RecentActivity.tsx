@@ -19,12 +19,12 @@ export function RecentActivity() {
 
   if (isLoading) {
     return (
-      <div className="px-4 space-y-3">
-        <div className="h-5 w-36 bg-slate-100 rounded-lg animate-pulse mb-4" />
+      <div className="space-y-3 px-6">
+        <div className="h-5 w-36 bg-surface rounded-lg animate-pulse mb-4" />
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-18 bg-white rounded-2xl animate-pulse border border-slate-100"
+            className="h-16 fcim-skeleton !mx-0"
           />
         ))}
       </div>
@@ -32,63 +32,66 @@ export function RecentActivity() {
   }
 
   return (
-    <div className="px-4 space-y-3 pb-32">
-      <h3 className="text-lg font-black text-slate-900 tracking-tight">
-        Recent Activity
-      </h3>
+    <div className="space-y-3 pb-32">
+      <div className="px-6 mb-4">
+        <h3 className="text-base font-bold text-foreground tracking-tight font-syne">
+          Recent Activity
+        </h3>
+      </div>
+      
       {!transactions || transactions.length === 0 ? (
-        <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-200">
-          <p className="text-slate-400 font-medium text-sm">
-            No activity today yet.
+        <div className="fcim-empty mx-6">
+          <p className="fcim-empty-title text-muted">
+            Ko si iṣowo loni
           </p>
-          <p className="text-xs text-slate-300 mt-1">
-            Use the mic button to record a transaction
+          <p className="text-xs text-muted/60 mt-2 font-medium">
+            No activity today yet. Use the mic to record.
           </p>
         </div>
       ) : (
         transactions.map((item: any) => (
           <div
             key={item._id}
-            className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-50 shadow-sm"
+            className="fcim-list-card"
           >
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div
-                className={cn(
-                  "p-2.5 rounded-xl flex-shrink-0",
-                  item.type === "credit"
-                    ? "text-rose-500 bg-rose-50"
-                    : item.type === "payment"
-                      ? "text-emerald-500 bg-emerald-50"
-                      : "text-blue-500 bg-blue-50",
-                )}
-              >
-                {item.type === "credit" ? (
-                  <ArrowUpRight className="w-5 h-5" />
-                ) : item.type === "payment" ? (
-                  <ArrowDownLeft className="w-5 h-5" />
-                ) : (
-                  <RefreshCcw className="w-5 h-5" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="font-bold text-slate-900 truncate">
-                  {item.customer?.name || "Unknown Customer"}
-                </p>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                  {formatDistanceToNow(new Date(item.createdAt), {
-                    addSuffix: true,
-                  })}
-                </p>
-              </div>
+            <div
+              className={cn(
+                "fcim-list-icon",
+                item.type === "credit"
+                  ? "credit"
+                  : item.type === "payment"
+                    ? "payment"
+                    : "adjust",
+              )}
+            >
+              {item.type === "credit" ? (
+                <ArrowUpRight className="w-5 h-5" />
+              ) : item.type === "payment" ? (
+                <ArrowDownLeft className="w-5 h-5" />
+              ) : (
+                <RefreshCcw className="w-5 h-5" />
+              )}
             </div>
+            
+            <div className="fcim-list-info">
+              <p className="fcim-list-name">
+                {item.customer?.name || "Unknown Customer"}
+              </p>
+              <p className="fcim-list-meta">
+                {formatDistanceToNow(new Date(item.createdAt), {
+                  addSuffix: true,
+                })}
+              </p>
+            </div>
+
             <p
               className={cn(
-                "font-black text-base flex-shrink-0",
+                "fcim-list-amount",
                 item.type === "credit"
-                  ? "text-rose-600"
+                  ? "credit"
                   : item.type === "payment"
-                    ? "text-emerald-600"
-                    : "text-blue-600",
+                    ? "payment"
+                    : "adjust",
               )}
             >
               {item.type === "credit" ? "-" : "+"}

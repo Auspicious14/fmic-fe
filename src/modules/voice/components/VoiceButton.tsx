@@ -17,16 +17,16 @@ export function VoiceButton({ isRecording, isProcessing, onClick }: VoiceButtonP
       <AnimatePresence>
         {(isRecording || isProcessing) && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="absolute -top-20 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl shadow-xl border border-slate-100 whitespace-nowrap"
+            exit={{ opacity: 0, scale: 0.8, y: 10 }}
+            className="absolute -top-16 left-1/2 -translate-x-1/2 bg-surface border border-border px-5 py-2.5 rounded-[14px] shadow-2xl whitespace-nowrap"
           >
             <p className={cn(
-              "text-sm font-black uppercase tracking-widest",
-              isRecording ? "text-rose-500 animate-pulse" : "text-blue-500"
+              "text-[10px] font-bold uppercase tracking-[2px] font-sans",
+              isRecording ? "text-danger animate-pulse" : "text-accent"
             )}>
-              {isRecording ? "Listening..." : "Thinking..."}
+              {isRecording ? "Listening..." : "Processing..."}
             </p>
           </motion.div>
         )}
@@ -34,13 +34,17 @@ export function VoiceButton({ isRecording, isProcessing, onClick }: VoiceButtonP
 
       <motion.button
         whileTap={{ scale: 0.9 }}
-        animate={isRecording ? { scale: [1, 1.1, 1] } : {}}
-        transition={isRecording ? { repeat: Infinity, duration: 1.5 } : {}}
+        animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
+        transition={isRecording ? { repeat: Infinity, duration: 1.5, ease: "easeInOut" } : {}}
         onClick={onClick}
         disabled={isProcessing}
         className={cn(
-          "w-20 h-20 rounded-full flex items-center justify-center shadow-[0_12px_48px_rgba(0,0,0,0.15)] transition-all",
-          isRecording ? "bg-rose-500 text-white" : isProcessing ? "bg-blue-500 text-white" : "bg-slate-900 text-white"
+          "w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-2xl",
+          isRecording 
+            ? "bg-danger text-white btn-pulse" 
+            : isProcessing 
+              ? "bg-elevated text-muted" 
+              : "bg-accent text-background"
         )}
       >
         {isProcessing ? (
