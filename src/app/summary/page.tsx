@@ -54,19 +54,19 @@ function StatCard({
   bg: string;
 }) {
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+    <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
       <div className="flex items-start justify-between mb-3">
         <div className={cn("p-2.5 rounded-xl", bg)}>
           <Icon className={cn("w-5 h-5", color)} />
         </div>
       </div>
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+      <p className="text-xs font-bold text-muted uppercase tracking-widest">
         {label}
       </p>
-      <p className="text-2xl font-black text-slate-900 mt-1 leading-tight">
+      <p className="text-2xl font-black text-foreground mt-1 leading-tight font-syne">
         {value}
       </p>
-      {subLabel && <p className="text-xs text-slate-400 mt-1">{subLabel}</p>}
+      {subLabel && <p className="text-xs text-muted mt-1">{subLabel}</p>}
     </div>
   );
 }
@@ -162,13 +162,13 @@ export default function SummaryPage() {
   const COLORS = ["#ef4444", "#10b981", "#3b82f6"];
 
   return (
-    <div className="pt-8 min-h-screen bg-slate-50/50">
+    <div className="pt-8 min-h-screen bg-background">
       <header className="px-6 mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-            Business Intelligence
+          <h1 className="text-2xl font-black text-foreground leading-none tracking-tight font-syne">
+            Insights
           </h1>
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
+          <p className="text-xs text-muted font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
             <Activity className="w-3 h-3" />
             Live Insights • {format(new Date(), "MMM d, yyyy")}
           </p>
@@ -176,7 +176,7 @@ export default function SummaryPage() {
         <div className="flex gap-2">
           <button
             onClick={() => refetch()}
-            className="p-3 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 active:scale-95 transition-transform"
+            className="p-3 bg-surface rounded-xl shadow-sm border border-border text-muted active:scale-95 transition-transform"
           >
             {isFetching ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -186,7 +186,7 @@ export default function SummaryPage() {
           </button>
           <button
             onClick={handleExportCSV}
-            className="p-3 bg-slate-900 rounded-xl shadow-lg text-white active:scale-95 transition-transform"
+            className="p-3 bg-foreground rounded-xl shadow-lg text-background active:scale-95 transition-transform"
           >
             <Download className="w-5 h-5" />
           </button>
@@ -199,11 +199,11 @@ export default function SummaryPage() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-28 bg-white rounded-2xl animate-pulse"
+                className="h-28 bg-surface rounded-2xl animate-pulse"
               />
             ))}
           </div>
-          <div className="h-64 bg-white rounded-3xl animate-pulse" />
+          <div className="h-64 bg-surface rounded-3xl animate-pulse" />
         </div>
       ) : (
         <div className="px-6 space-y-5 pb-32">
@@ -214,171 +214,96 @@ export default function SummaryPage() {
               value={formatCurrency(creditTotal)}
               subLabel="Money owed to you"
               icon={TrendingUp}
-              color="text-rose-600"
-              bg="bg-rose-50"
+              color="text-danger"
+              bg="bg-danger/10"
             />
             <StatCard
               label="Today's Inflow (Payments)"
               value={formatCurrency(revenueTotal)}
               subLabel="Cash collected"
               icon={TrendingDown}
-              color="text-emerald-600"
-              bg="bg-emerald-50"
+              color="text-success"
+              bg="bg-success/10"
             />
             <StatCard
               label="Customer Reach"
               value={summary?.uniqueCustomers || 0}
               subLabel="Active buyers today"
               icon={Users}
-              color="text-violet-600"
-              bg="bg-violet-50"
+              color="text-accent"
+              bg="bg-accent/10"
             />
             <StatCard
               label="Ops Volume"
               value={summary?.totalTransactions || 0}
               subLabel="Total events logged"
               icon={Activity}
-              color="text-blue-600"
-              bg="bg-blue-50"
+              color="text-muted"
+              bg="bg-elevated"
             />
           </div>
 
           {/* Performance Trend Chart */}
-          <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm overflow-hidden">
+          <div className="bg-surface border border-border rounded-[32px] p-6 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-sm font-black text-slate-900">
-                  7-Day Transaction Flow
+                <h3 className="text-sm font-black text-foreground font-syne uppercase tracking-wider">
+                  Weekly Volume
                 </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
-                  Payment vs Credit Trends
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-[10px] font-bold text-slate-500">
-                    Payments
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-rose-400" />
-                  <span className="text-[10px] font-bold text-slate-500">
-                    Credit
-                  </span>
-                </div>
               </div>
             </div>
-
-            <div className="h-64 w-full">
-              {isTrendsLoading ? (
-                <div className="h-full flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-slate-200" />
-                </div>
-              ) : trends?.length > 1 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={trends}
-                    margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorPayment"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#10b981"
-                          stopOpacity={0.1}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#10b981"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                      <linearGradient
-                        id="colorCredit"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#ef4444"
-                          stopOpacity={0.1}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#ef4444"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f1f5f9"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-                      tickFormatter={(str) => format(new Date(str), "MMM d")}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 9, fontWeight: 700, fill: "#94a3b8" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: "16px",
-                        border: "none",
-                        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                      }}
-                      formatter={(val: any) => [formatCurrency(val), ""]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="payment"
-                      stroke="#10b981"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#colorPayment)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="credit"
-                      stroke="#ef4444"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#colorCredit)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-300">
-                  <BarIcon className="w-8 h-8 mb-2 opacity-20" />
-                  <p className="text-xs font-bold uppercase tracking-widest">
-                    Not enough data for chart
-                  </p>
-                </div>
-              )}
+            <div className="h-[200px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trends}>
+                  <defs>
+                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="var(--border)"
+                  />
+                  <XAxis
+                    dataKey="_id"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "var(--muted)", fontWeight: 700 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: "var(--muted)", fontWeight: 700 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--surface)",
+                      border: "0.5px solid var(--border)",
+                      borderRadius: "12px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "var(--foreground)",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="var(--accent)"
+                    fillOpacity={1}
+                    fill="url(#colorTotal)"
+                    strokeWidth={3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Revenue Distribution */}
-            <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm">
-              <h3 className="text-sm font-black text-slate-900 mb-4">
+            <div className="bg-surface border border-border rounded-[32px] p-6 shadow-sm">
+              <h3 className="text-sm font-black text-foreground mb-4 font-syne uppercase tracking-wider">
                 Volume Distribution
               </h3>
               <div className="h-48">
@@ -401,11 +326,17 @@ export default function SummaryPage() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(val: any) => formatCurrency(val)} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "var(--surface)",
+                          border: "0.5px solid var(--border)",
+                          borderRadius: "12px",
+                        }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-300">
+                  <div className="h-full flex items-center justify-center text-muted">
                     <PieIcon className="w-8 h-8 opacity-20" />
                   </div>
                 )}
@@ -421,13 +352,13 @@ export default function SummaryPage() {
                         className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: COLORS[i % COLORS.length] }}
                       />
-                      <span className="text-[10px] font-bold text-slate-500">
+                      <span className="text-[10px] font-bold text-muted">
                         {d.name}
                       </span>
                     </div>
-                    <span className="text-[10px] font-black p-1 bg-slate-50 rounded">
+                    <span className="text-[10px] font-black p-1 bg-elevated rounded text-foreground">
                       {Math.round(
-                        (d.value / (creditTotal + revenueTotal)) * 100,
+                        (d.value / (creditTotal + revenueTotal || 1)) * 100,
                       )}
                       %
                     </span>
@@ -437,57 +368,72 @@ export default function SummaryPage() {
             </div>
 
             {/* Net Position Summary */}
-            <div className="bg-slate-900 rounded-[32px] p-8 text-white flex flex-col justify-between">
+            <div className="bg-foreground rounded-[32px] p-8 text-background flex flex-col justify-between">
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
+                <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.2em] mb-4">
                   Consolidated Net Position
                 </p>
                 <p
                   className={cn(
-                    "text-4xl font-black",
-                    netPosition >= 0 ? "text-emerald-400" : "text-rose-400",
+                    "text-4xl font-black font-syne leading-none tracking-tighter",
+                    netPosition >= 0 ? "text-success" : "text-danger"
                   )}
                 >
-                  {netPosition >= 0 ? "+" : ""}
-                  {formatCurrency(netPosition)}
+                  {formatCurrency(Math.abs(netPosition))}
                 </p>
-                <div className="mt-4 flex items-center gap-2 text-xs font-bold text-slate-400">
-                  <Activity className="w-4 h-4" />
-                  <span>
-                    Calculated from {summary?.totalTransactions} operations
-                  </span>
-                </div>
+                <p className="text-[10px] font-bold opacity-40 mt-3 flex items-center gap-2">
+                  {netPosition >= 0 ? <TrendingUp size={12}/> : <TrendingDown size={12}/>}
+                  {netPosition >= 0 ? "SURPLUS POSITION" : "DEFICIT POSITION"}
+                </p>
               </div>
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <p className="text-xs text-slate-300 leading-relaxed italic opacity-80">
-                  {netPosition >= 0
-                    ? "Exceptional collection day! Cash flow is positive and liquidity is high."
-                    : "High credit extension today. Follow up with debtors to maintain balance."}
-                </p>
+
+              <div className="mt-8 pt-6 border-t border-background/10">
+                <button
+                  onClick={handleVerifyIntegrity}
+                  disabled={verifying}
+                  className="w-full flex items-center justify-between group"
+                >
+                  <div className="text-left">
+                    <p className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                      <Shield className="w-3 h-3 text-accent" />
+                      Verify Integrity
+                    </p>
+                    <p className="text-[10px] font-bold opacity-40 mt-1">
+                      Run ledger audit check
+                    </p>
+                  </div>
+                  <div className="p-2 bg-background/10 rounded-xl group-active:scale-90 transition-transform">
+                    {verifying ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </div>
+                </button>
               </div>
             </div>
           </div>
 
           {/* Integrity & Security */}
-          <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm">
+          <div className="bg-surface border border-border rounded-[32px] p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-sm font-black text-slate-900">
+                <h3 className="text-sm font-black text-foreground font-syne uppercase tracking-wider">
                   Security Audit Trail
                 </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] text-muted font-bold uppercase tracking-widest mt-0.5">
                   Blockchain-style hash verification
                 </p>
               </div>
               <button
                 onClick={handleVerifyIntegrity}
                 disabled={verifying}
-                className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-slate-900 rounded-2xl text-xs font-black hover:bg-slate-200 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-3 bg-elevated text-foreground rounded-2xl text-xs font-black hover:bg-surface border border-transparent hover:border-border transition-all disabled:opacity-50 active:scale-95"
               >
                 {verifying ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Shield className="w-4 h-4" />
+                  <Shield className="w-4 h-4 text-accent" />
                 )}
                 {verifying ? "Auditing…" : "Run Verification"}
               </button>
@@ -498,8 +444,8 @@ export default function SummaryPage() {
                 className={cn(
                   "p-5 rounded-[24px]",
                   auditResult.flagged === 0
-                    ? "bg-emerald-50/50"
-                    : "bg-rose-50/50",
+                    ? "bg-success/5"
+                    : "bg-danger/5",
                 )}
               >
                 <div className="flex items-center gap-3 mb-4">
@@ -507,8 +453,8 @@ export default function SummaryPage() {
                     className={cn(
                       "p-2 rounded-xl",
                       auditResult.flagged === 0
-                        ? "bg-emerald-100 text-emerald-600"
-                        : "bg-rose-100 text-rose-600",
+                        ? "bg-success/10 text-success"
+                        : "bg-danger/10 text-danger",
                     )}
                   >
                     {auditResult.flagged === 0 ? (
@@ -520,17 +466,17 @@ export default function SummaryPage() {
                   <div>
                     <p
                       className={cn(
-                        "text-sm font-black",
+                        "text-sm font-black font-syne uppercase tracking-tight",
                         auditResult.flagged === 0
-                          ? "text-emerald-900"
-                          : "text-rose-900",
+                          ? "text-success"
+                          : "text-danger",
                       )}
                     >
                       {auditResult.flagged === 0
                         ? "System Integrity Verified"
                         : "Integrity Compromised"}
                     </p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                    <p className="text-[10px] text-muted font-bold uppercase tracking-widest">
                       {auditResult.flagged === 0
                         ? "All cryptographic signatures match"
                         : `${auditResult.flagged} signatures failed match`}
@@ -539,25 +485,25 @@ export default function SummaryPage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-white/50 p-3 rounded-xl text-center">
-                    <p className="text-sm font-black text-slate-900">
+                  <div className="bg-surface p-3 rounded-xl text-center border border-border/50">
+                    <p className="text-sm font-black text-foreground">
                       {auditResult.total}
                     </p>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase">
+                    <p className="text-[9px] text-muted font-bold uppercase">
                       Total
                     </p>
                   </div>
-                  <div className="bg-white/50 p-3 rounded-xl text-center">
-                    <p className="text-sm font-black text-emerald-600">
+                  <div className="bg-surface p-3 rounded-xl text-center border border-border/50">
+                    <p className="text-sm font-black text-success">
                       {auditResult.valid}
                     </p>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase">
+                    <p className="text-[9px] text-muted font-bold uppercase">
                       Valid
                     </p>
                   </div>
-                  <div className="bg-white/50 p-3 rounded-xl text-center text-rose-600">
-                    <p className="text-sm font-black">{auditResult.flagged}</p>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase">
+                  <div className="bg-surface p-3 rounded-xl text-center border border-border/50">
+                    <p className="text-sm font-black text-danger">{auditResult.flagged}</p>
+                    <p className="text-[9px] text-muted font-bold uppercase">
                       Flags
                     </p>
                   </div>

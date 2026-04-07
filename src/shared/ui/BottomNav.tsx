@@ -29,8 +29,7 @@ export function BottomNav() {
               className={cn("fcim-nav-item", isActive && "active")}
             >
               <item.icon
-                className="w-5 h-5 transition-all"
-                style={{ color: isActive ? "#F4A931" : "#444" }}
+                className={cn("w-5 h-5 transition-all", isActive ? "text-accent" : "text-muted")}
               />
               <span className="transition-all">{item.label}</span>
             </Link>

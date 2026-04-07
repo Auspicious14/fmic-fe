@@ -85,7 +85,7 @@ export default function HistoryPage() {
     try {
       const canvas = await html2canvas(receiptRef.current, {
         scale: 2,
-        backgroundColor: "#ffffff",
+        backgroundColor: null,
         useCORS: true,
       });
 
@@ -180,15 +180,15 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="pt-8 min-h-screen bg-slate-50/50">
+    <div className="pt-8 min-h-screen bg-background">
       <header className="px-6 mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-black text-slate-900 leading-none tracking-tight">
+        <h1 className="text-2xl font-black text-foreground tracking-tight font-syne">
           History
         </h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => refetch()}
-            className="p-3 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-400 active:scale-95 transition-transform"
+            className="p-3 bg-surface rounded-xl shadow-sm border border-border text-muted active:scale-95 transition-transform"
           >
             <RefreshCcw className="w-5 h-5" />
           </button>
@@ -197,28 +197,28 @@ export default function HistoryPage() {
 
       {/* Search bar */}
       <div className="px-6 mb-4">
-        <div className="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm">
-          <Search className="w-5 h-5 text-slate-300 flex-shrink-0" />
+        <div className="flex items-center gap-3 bg-surface border border-border rounded-2xl px-4 py-3 shadow-sm focus-within:border-accent/50 transition-colors">
+          <Search className="w-5 h-5 text-muted flex-shrink-0" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by customer, type, or ID…"
-            className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 text-sm font-medium outline-none"
+            placeholder="Search history…"
+            className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none"
           />
         </div>
       </div>
 
       {/* Filter chips */}
-      <div className="px-6 mb-5 flex gap-2 overflow-x-auto pb-1">
+      <div className="px-6 mb-5 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {(["all", "credit", "payment", "adjustment"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setFilterType(type)}
             className={cn(
-              "px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all",
+              "px-5 py-2.5 rounded-xl border text-xs font-black uppercase tracking-widest transition-all",
               filterType === type
-                ? "bg-slate-900 text-white shadow-lg"
-                : "bg-white text-slate-400 border border-slate-100 shadow-sm",
+                ? "bg-accent border-accent text-background shadow-lg"
+                : "bg-surface border-border text-muted shadow-sm",
             )}
           >
             {type}
@@ -226,122 +226,90 @@ export default function HistoryPage() {
         ))}
       </div>
 
-      {isLoading ? (
-        <div className="px-6 space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
+      <div className="px-6 space-y-3 pb-32">
+        {isLoading ? (
+          [1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-20 bg-white rounded-2xl animate-pulse border border-slate-100"
+              className="h-20 bg-surface border border-border rounded-2xl animate-pulse"
             />
-          ))}
-        </div>
-      ) : (
-        <div className="px-6 space-y-3 pb-32">
-          {filtered.length === 0 ? (
-            <div className="p-10 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-sm leading-relaxed">
-                No transactions found
-              </p>
-            </div>
-          ) : (
-            filtered.map((t: any) => (
-              <motion.div
-                key={t._id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm"
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center bg-surface border border-dashed border-border rounded-3xl">
+            <Search className="w-12 h-12 text-muted/20 mx-auto mb-4" />
+            <p className="text-muted font-bold uppercase tracking-widest text-xs">
+              No transactions found
+            </p>
+          </div>
+        ) : (
+          filtered.map((t: any) => (
+            <motion.div
+              key={t._id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              onClick={() => handleViewReceipt(t)}
+              className="flex items-center gap-4 p-4 bg-surface border border-border rounded-2xl active:scale-[0.98] transition-all cursor-pointer group hover:border-accent/50"
+            >
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
+                  t.type === "credit"
+                    ? "bg-danger/10 text-danger"
+                    : t.type === "payment"
+                      ? "bg-success/10 text-success"
+                      : "bg-accent/10 text-accent",
+                )}
               >
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div
-                    className={cn(
-                      "p-3 rounded-xl flex-shrink-0",
-                      typeColors[t.type] || "bg-slate-50 text-slate-500",
-                    )}
-                  >
-                    {t.type === "credit" ? (
-                      <ArrowUpRight className="w-5 h-5" />
-                    ) : t.type === "payment" ? (
-                      <ArrowDownLeft className="w-5 h-5" />
-                    ) : (
-                      <RefreshCcw className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-black text-slate-900 text-base leading-none truncate">
-                      {t.customer?.name || "Unknown Customer"}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1.5">
-                      {formatDistanceToNow(new Date(t.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 ml-2">
-                  <div className="text-right">
-                    <p
-                      className={cn(
-                        "font-black text-lg leading-none",
-                        t.type === "credit"
-                          ? "text-rose-600"
-                          : t.type === "payment"
-                            ? "text-emerald-600"
-                            : "text-blue-600",
-                      )}
-                    >
-                      {t.type === "credit" ? "-" : "+"}
-                      {formatCurrency(t.totalAmount)}
-                    </p>
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">
-                      {t.items?.length > 0
-                        ? `${t.items.length} Items`
-                        : "Direct"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <button
-                      onClick={() => handleViewReceipt(t)}
-                      disabled={loadingReceipt}
-                      className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-                      title="View Receipt"
-                    >
-                      {loadingReceipt && selectedTx?._id === t._id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Receipt className="w-4 h-4" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleShareWhatsApp(t)}
-                      className="p-2 bg-emerald-50 rounded-xl text-emerald-500 hover:bg-emerald-100 transition-colors"
-                      title="Share via WhatsApp"
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
-      )}
+                {t.type === "credit" ? (
+                  <ArrowUpRight className="w-6 h-6" />
+                ) : t.type === "payment" ? (
+                  <ArrowDownLeft className="w-6 h-6" />
+                ) : (
+                  <RefreshCcw className="w-6 h-6" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-foreground truncate font-syne uppercase tracking-tight">
+                  {t.customer?.name || "Unknown"}
+                </p>
+                <p className="text-[10px] text-muted font-black uppercase tracking-widest mt-0.5">
+                  {formatDistanceToNow(new Date(t.createdAt), {
+                    addSuffix: true,
+                  })}
+                </p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={cn(
+                    "text-lg font-black font-syne",
+                    t.type === "credit" ? "text-danger" : "text-success",
+                  )}
+                >
+                  {t.type === "credit" ? "-" : "+"}
+                  {formatCurrency(t.totalAmount)}
+                </p>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
 
       {/* Receipt Viewer Modal */}
       <AnimatePresence>
         {showReceipt && receiptHtml && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-4">
             <motion.div
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="w-full max-w-lg bg-surface rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-border"
             >
-              <div className="flex items-center justify-between p-6 border-b border-slate-50 bg-white">
+              <div className="flex items-center justify-between p-6 border-b border-border bg-surface">
                 <div>
-                  <h2 className="font-black text-slate-900 text-xl tracking-tight">
+                  <h2 className="font-black text-foreground text-xl tracking-tight font-syne uppercase">
                     Receipt
                   </h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5">
+                  <p className="text-[10px] text-muted font-bold uppercase tracking-[0.2em] mt-0.5">
                     Official Record •{" "}
                     {selectedTx?._id?.substring(0, 8).toUpperCase()}
                   </p>
@@ -351,17 +319,17 @@ export default function HistoryPage() {
                     setShowReceipt(false);
                     setReceiptHtml("");
                   }}
-                  className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200 transition-colors"
+                  className="p-2 bg-elevated text-muted rounded-full hover:text-foreground transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="flex-1 overflow-y-auto bg-background p-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
                   {loadingReceipt ? (
                     <div className="flex items-center justify-center min-h-[500px]">
-                      <Loader2 className="w-8 h-8 animate-spin text-slate-200" />
+                      <Loader2 className="w-8 h-8 animate-spin text-muted" />
                     </div>
                   ) : (
                     <iframe
@@ -373,11 +341,11 @@ export default function HistoryPage() {
                 </div>
               </div>
 
-              <div className="p-6 bg-white border-t border-slate-50 flex gap-3">
+              <div className="p-6 bg-surface border-t border-border flex gap-3">
                 <button
                   onClick={handleDownloadImage}
                   disabled={isDownloading}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-95"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all disabled:opacity-50"
                 >
                   {isDownloading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -388,7 +356,7 @@ export default function HistoryPage() {
                 </button>
                 <button
                   onClick={() => handleShareWhatsApp(selectedTx)}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-emerald-600 transition-all active:scale-95"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-success text-white rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all"
                 >
                   <Share2 className="w-4 h-4" />
                   Share Image

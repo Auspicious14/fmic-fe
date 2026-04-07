@@ -23,11 +23,11 @@ function getInitials(name: string): string {
 }
 
 export const AVATAR_PALETTES = [
-  { bg: "#1F1A0A", color: "#F4A931" },
-  { bg: "#1A0A0A", color: "#EF4444" },
-  { bg: "#0A1A10", color: "#22C55E" },
-  { bg: "#0A0F1A", color: "#3B82F6" },
-  { bg: "#120A1A", color: "#A855F7" },
+  { bg: "rgba(244, 169, 49, 0.15)", color: "#F4A931" },
+  { bg: "rgba(239, 68, 68, 0.15)", color: "#EF4444" },
+  { bg: "rgba(34, 197, 94, 0.15)", color: "#22C55E" },
+  { bg: "rgba(59, 130, 246, 0.15)", color: "#3B82F6" },
+  { bg: "rgba(168, 85, 247, 0.15)", color: "#A855F7" },
 ];
 
 export function avatarPalette(name: string) {

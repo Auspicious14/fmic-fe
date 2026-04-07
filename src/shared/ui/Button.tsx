@@ -32,7 +32,7 @@ export function Button({
     xl: 'px-8 py-5 text-xl font-semibold rounded-[18px]',
   };
 
-  const spinnerColor = (variant === 'primary' || variant === 'confirm') ? 'border-t-[#0A0A0A]' : 'border-t-white';
+  const spinnerColor = (variant === 'primary' || variant === 'confirm') ? 'border-t-background' : 'border-t-foreground';
 
   return (
     <button 
@@ -46,7 +46,7 @@ export function Button({
       {...props}
     >
       {isLoading ? (
-        <span className={cn("w-5 h-5 border-2 border-white/30 rounded-full animate-spin mr-2", spinnerColor)} />
+        <span className={cn("w-5 h-5 border-2 border-current/30 rounded-full animate-spin mr-2", spinnerColor)} />
       ) : null}
       {children}
     </button>

@@ -1,6 +1,6 @@
 import { avatarPalette } from "@/shared/lib/utils";
 
-export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
+export function Avatar({ name, size = 36, className }: { name: string; size?: number; className?: string }) {
   const { bg, color } = avatarPalette(name);
   
   function getInitials(name: string): string {
@@ -27,6 +27,7 @@ export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
         flexShrink: 0,
         border: '0.5px solid rgba(255,255,255,0.05)'
       }}
+      className={className}
     >
       {getInitials(name)}
     </div>

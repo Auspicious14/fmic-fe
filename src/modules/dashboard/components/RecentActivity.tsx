@@ -33,14 +33,8 @@ export function RecentActivity() {
 
   return (
     <div className="space-y-3 pb-32">
-      <div className="px-6 mb-4">
-        <h3 className="text-base font-bold text-foreground tracking-tight font-syne">
-          Recent Activity
-        </h3>
-      </div>
-      
       {!transactions || transactions.length === 0 ? (
-        <div className="fcim-empty mx-6">
+        <div className="fcim-empty mx-6 mt-4">
           <p className="fcim-empty-title text-muted">
             Ko si iṣowo loni
           </p>

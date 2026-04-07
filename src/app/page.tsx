@@ -227,17 +227,15 @@ import {
   Plus,
   CheckCheck,
   TrendingUp,
-  Sun,
-  Moon,
 } from "lucide-react";
-import { useTheme } from "next-themes";
+import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { useVoiceCapture } from "@/modules/voice/hooks/useVoiceCapture";
 import { SummaryCards } from "@/modules/dashboard/components/SummaryCards";
 import { RecentActivity } from "@/modules/dashboard/components/RecentActivity";
 import { InterpretationPreview } from "@/modules/voice/components/InterpretationPreview";
 import { BottomNav } from "@/shared/ui/BottomNav";
 import apiClient from "@/shared/lib/api-client";
-import { avatarPalette, formatNaira, todayLabel } from "@/shared/lib/utils";
+import { avatarPalette, formatNaira, todayLabel, cn } from "@/shared/lib/utils";
 import { CustomerChip } from "@/modules/dashboard/components/CustomerChip";
 import { Customer } from "@/shared/types";
 
@@ -290,7 +288,7 @@ function VoiceButton({
     width: 72,
     height: 72,
     borderRadius: "50%",
-    background: isRecording ? "#EF4444" : isProcessing ? "#1A1A1A" : "#F4A931",
+    background: isRecording ? "var(--danger)" : isProcessing ? "var(--foreground)" : "var(--accent)",
     border: "none",
     cursor: isProcessing ? "default" : "pointer",
     display: "flex",
@@ -338,10 +336,11 @@ function VoiceButton({
 
 export default function Home() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [topCustomers, setTopCustomers] = useState<Customer[]>([]);
+
+  const [dashboardTab, setDashboardTab] = useState<"activity" | "debtors">("activity");
 
   useEffect(() => {
     setMounted(true);
@@ -548,10 +547,6 @@ export default function Home() {
     router.push("/login");
   }, [router]);
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
   if (!user || !mounted) {
     return (
       <div className="fcim-splash">
@@ -569,21 +564,17 @@ export default function Home() {
       <div className="fcim-page">
         <header className="fcim-header">
           <div className="fcim-header-top">
-            <div>
+            <div className="flex-1">
               <div className="fcim-greeting">
                 Ẹ káàbọ̀,{" "}
-                <span className="fcim-greeting-name">{firstName}</span>
+                <span className="fcim-greeting-name font-syne font-black">{firstName}</span>
               </div>
-              <div className="fcim-subtext">Iṣowo rẹ wa nibi</div>
+              <div className="fcim-subtext mt-1.5 font-bold text-[10px] text-muted/60 tracking-[0.2em] uppercase">
+                Iṣowo rẹ wa nibi
+              </div>
             </div>
             <div className="fcim-header-actions">
-              <button
-                className="fcim-icon-btn"
-                title="Toggle Theme"
-                onClick={toggleTheme}
-              >
-                {mounted && (theme === "dark" ? <Sun size={18} /> : <Moon size={18} />)}
-              </button>
+              <ThemeToggle />
               <button className="fcim-icon-btn" title="Search">
                 <Search size={18} />
               </button>
@@ -607,50 +598,91 @@ export default function Home() {
           <SummaryCards />
         </section>
 
-        {topCustomers.length > 0 && (
-          <section className="fcim-section">
-            <div className="fcim-section-header">
-              <span className="fcim-section-title">Top Debtors</span>
-              <span className="fcim-see-all">See all</span>
-            </div>
-            <div className="fcim-customers-scroll">
-              {topCustomers.map((c) => (
-                <CustomerChip key={c.id} customer={c} />
-              ))}
-            </div>
-          </section>
-        )}
+        <div className="fcim-tabs mt-8">
+          <button
+            className={cn("fcim-tab", dashboardTab === "activity" && "active")}
+            onClick={() => setDashboardTab("activity")}
+          >
+            Recent Activity
+          </button>
+          <button
+            className={cn("fcim-tab", dashboardTab === "debtors" && "active")}
+            onClick={() => setDashboardTab("debtors")}
+          >
+            Top Debtors
+          </button>
+        </div>
 
-        <section className="fcim-section fcim-activity-bottom-pad">
-          <div className="fcim-section-header">
-            <span className="fcim-section-title">Recent Activity</span>
-            <span className="fcim-see-all">Filter</span>
+        <div className="fcim-tab-content">
+          <div className="px-6 mb-4 mt-2">
+            <h3 className="text-base font-black text-foreground tracking-tight font-syne uppercase">
+              {dashboardTab === "activity" ? "Recent Activity" : "Top Debtors"}
+            </h3>
           </div>
-          <RecentActivity />
-        </section>
-
-        <VoiceButton
-          state={voiceState}
-          onClick={handleVoiceToggle}
-          recordingDuration={recordingDuration}
-        />
-
-        {interpretation && (
-          <InterpretationPreview
-            isOpen={showPreview}
-            data={interpretation}
-            onConfirm={handleConfirm}
-            onCancel={() => {
-              setShowPreview(false);
-              setConfirmedTransactions([]);
-            }}
-            onEdit={() => toast.info("Edit mode coming soon")}
-            isLoading={isConfirming}
-          />
-        )}
-
-        <BottomNav />
+          {dashboardTab === "activity" ? (
+            <section className="fcim-activity-bottom-pad">
+              <RecentActivity />
+              <div className="px-6 -mt-24 mb-32 relative z-10">
+                <button 
+                  onClick={() => router.push("/history")}
+                  className="w-full py-4 bg-surface border border-border rounded-2xl text-xs font-black uppercase tracking-widest text-muted hover:text-foreground transition-colors"
+                >
+                  View All Activity
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="fcim-activity-bottom-pad">
+              {topCustomers.length > 0 ? (
+                <>
+                  {topCustomers.map((c) => (
+                    <CustomerChip key={c.id} customer={c} />
+                  ))}
+                  <div className="px-6 mt-4">
+                    <button 
+                      onClick={() => router.push("/customers")}
+                      className="w-full py-4 bg-surface border border-border rounded-2xl text-xs font-black uppercase tracking-widest text-muted hover:text-foreground transition-colors"
+                    >
+                      View All Customers
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="fcim-empty mx-6 mt-8">
+                  <p className="fcim-empty-title text-muted">
+                    No debtors found
+                  </p>
+                  <p className="text-xs text-muted/60 mt-2 font-medium">
+                    Your customers are all cleared!
+                  </p>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
       </div>
+
+      <VoiceButton
+        state={voiceState}
+        onClick={handleVoiceToggle}
+        recordingDuration={recordingDuration}
+      />
+
+      {interpretation && (
+        <InterpretationPreview
+          isOpen={showPreview}
+          data={interpretation}
+          onConfirm={handleConfirm}
+          onCancel={() => {
+            setShowPreview(false);
+            setConfirmedTransactions([]);
+          }}
+          onEdit={() => toast.info("Edit mode coming soon")}
+          isLoading={isConfirming}
+        />
+      )}
+
+      <BottomNav />
     </>
   );
 }

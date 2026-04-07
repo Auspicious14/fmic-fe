@@ -232,101 +232,137 @@ function CustomerFormModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <motion.div
+        <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+          <motion.div 
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
-            className="w-full max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] shadow-2xl flex flex-col max-h-[90vh]"
+            className="w-full max-w-lg bg-surface rounded-t-[32px] sm:rounded-[32px] shadow-2xl flex flex-col max-h-[90vh] border border-border"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <div>
-                <h2 className="text-xl font-black text-slate-900">
-                  {mode === "add" ? "Add New Customer" : "Edit Customer"}
-                </h2>
-                <p className="text-xs text-slate-400 font-medium mt-1">
-                  {mode === "add"
-                    ? "Fill in the details below to add a new customer"
-                    : "Update the customer information"}
-                </p>
+            <div className="p-8 pb-10 flex-shrink-0 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-foreground font-syne uppercase">
+                    {mode === "add" ? "New Customer" : "Edit Customer"}
+                  </h2>
+                  <p className="text-xs text-muted font-bold uppercase tracking-widest mt-1">
+                    Fill in the details below
+                  </p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 bg-elevated rounded-xl text-muted hover:text-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            {/* Form */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {fields.map((field) => (
-                <div key={field.key}>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                    {field.label}{" "}
-                    {field.required && <span className="text-rose-500">*</span>}
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">
+                    Full Name <span className="text-danger">*</span>
                   </label>
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 border rounded-xl px-4 py-3 transition-all",
-                      errors[field.key] && touched[field.key]
-                        ? "border-rose-300 bg-rose-50"
-                        : "border-slate-100 bg-slate-50 focus-within:border-slate-400 focus-within:bg-white",
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex-shrink-0",
-                        errors[field.key] && touched[field.key]
-                          ? "text-rose-400"
-                          : "text-slate-400",
-                      )}
-                    >
-                      {field.icon}
-                    </span>
+                  <div className={cn(
+                    "flex items-center gap-3 px-4 py-4 rounded-2xl border transition-all",
+                    errors.name && touched.name 
+                      ? "border-danger bg-danger/5" 
+                      : "border-border bg-elevated focus-within:border-accent focus-within:bg-surface"
+                  )}>
+                    <User className={cn(
+                      "w-5 h-5 transition-colors",
+                      errors.name && touched.name ? "text-danger" : "text-muted"
+                    )} />
                     <input
-                      type={field.type || "text"}
-                      value={form[field.key]}
-                      onChange={(e) => handleChange(field.key, e.target.value)}
-                      onBlur={() => handleBlur(field.key)}
-                      placeholder={field.placeholder}
-                      className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 text-sm font-medium outline-none"
+                      placeholder="Enter customer name"
+                      value={form.name}
+                      onChange={(e) => {
+                        setForm({ ...form, name: e.target.value });
+                        setErrors({ ...errors, name: "" });
+                      }}
+                      onBlur={() => setTouched({ ...touched, name: true })}
+                      className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none"
                     />
                   </div>
-                  {errors[field.key] && touched[field.key] && (
-                    <p className="text-xs text-rose-500 font-medium mt-1 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" />
-                      {errors[field.key]}
+                  {errors.name && touched.name && (
+                    <p className="text-[10px] text-danger font-black uppercase tracking-widest mt-1.5 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> {errors.name}
                     </p>
                   )}
                 </div>
-              ))}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Phone</label>
+                    <div className="flex items-center gap-3 px-4 py-4 bg-elevated border border-border rounded-2xl focus-within:border-accent transition-colors">
+                      <Phone className="w-4 h-4 text-muted" />
+                      <input
+                        type="tel"
+                        placeholder="080..."
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Tag / Label</label>
+                    <div className="flex items-center gap-3 px-4 py-4 bg-elevated border border-border rounded-2xl focus-within:border-accent transition-colors">
+                      <Plus className="w-4 h-4 text-muted" />
+                      <input
+                        placeholder="e.g. Regular"
+                        value={form.tag}
+                        onChange={(e) => setForm({ ...form, tag: e.target.value })}
+                        className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Email Address</label>
+                  <div className="flex items-center gap-3 px-4 py-4 bg-elevated border border-border rounded-2xl focus-within:border-accent transition-colors">
+                    <Mail className="w-4 h-4 text-muted" />
+                    <input
+                      type="email"
+                      placeholder="customer@email.com"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Shop Address</label>
+                  <div className="flex items-start gap-3 px-4 py-4 bg-elevated border border-border rounded-2xl focus-within:border-accent transition-colors">
+                    <MapPin className="w-4 h-4 text-muted mt-0.5" />
+                    <textarea
+                      placeholder="Enter physical location"
+                      value={form.address}
+                      onChange={(e) => setForm({ ...form, address: e.target.value })}
+                      rows={2}
+                      className="flex-1 bg-transparent text-foreground placeholder-muted text-sm font-medium outline-none resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Actions */}
-            <div className="p-6 border-t border-slate-100 flex gap-3">
+            <div className="p-8 border-t border-border flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm"
+                className="flex-1 py-4 bg-elevated text-foreground rounded-2xl font-bold text-sm active:scale-95 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60"
+                className="flex-1 py-4 bg-foreground text-background rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95 transition-all"
               >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle className="w-4 h-4" />
-                )}
-                {isLoading
-                  ? "Saving…"
-                  : mode === "add"
-                    ? "Add Customer"
-                    : "Save Changes"}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : mode === "add" ? "Create Customer" : "Save Changes"}
               </button>
             </div>
           </motion.div>
@@ -358,57 +394,52 @@ function DeleteConfirmModal({
   return (
     <AnimatePresence>
       {isOpen && customer && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
+        <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-8"
+            className="w-full max-w-sm bg-surface rounded-3xl shadow-2xl p-8 border border-border"
           >
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="p-4 bg-rose-50 rounded-2xl mb-4">
-                <AlertTriangle className="w-8 h-8 text-rose-500" />
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-danger/10 text-danger rounded-2xl flex items-center justify-center mb-6">
+                <Trash2 className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-black text-slate-900">
+              <h2 className="text-xl font-black text-foreground font-syne uppercase">
                 Delete Customer?
               </h2>
-              <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                <strong>{customer.name}</strong> will be soft-deleted. Their
-                transaction history will be preserved for audit purposes.
+              <p className="text-sm text-muted mt-2 leading-relaxed font-medium">
+                This will permanently remove <strong>{customer.name}</strong> and all their transaction history.
               </p>
             </div>
 
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                Reason (optional)
-              </label>
-              <input
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="e.g. Customer moved away, duplicate entry…"
-                className="w-full border border-slate-100 bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-800 outline-none focus:border-slate-300"
-              />
-            </div>
+            <div className="mt-8 space-y-4">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-2">Reason for deletion</label>
+                <textarea
+                  placeholder="e.g. Duplicate account"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full border border-border bg-elevated rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-danger/50 resize-none"
+                  rows={3}
+                />
+              </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => onConfirm(reason)}
-                disabled={isLoading}
-                className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-                {isLoading ? "Deleting…" : "Delete"}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-4 bg-elevated text-foreground rounded-2xl font-bold text-sm active:scale-95 transition-all"
+                >
+                  Keep
+                </button>
+                <button
+                  onClick={() => onConfirm(reason)}
+                  disabled={isLoading || !reason.trim()}
+                  className="flex-1 py-4 bg-danger text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40 active:scale-95 transition-all"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -445,7 +476,7 @@ export default function CustomersPage() {
     try {
       const canvas = await html2canvas(receiptRef.current, {
         scale: 2,
-        backgroundColor: "#ffffff",
+        backgroundColor: null,
         useCORS: true,
       });
       const link = document.createElement("a");
@@ -466,7 +497,7 @@ export default function CustomersPage() {
     try {
       const canvas = await html2canvas(receiptRef.current, {
         scale: 2,
-        backgroundColor: "#ffffff",
+        backgroundColor: null,
         useCORS: true,
       });
 
@@ -550,7 +581,8 @@ export default function CustomersPage() {
     },
   });
 
-  const customers = data?.customers || [];
+  const customers = data || [];
+
   const totalCount = data?.total || 0;
 
   const { data: history, isLoading: isHistoryLoading } = useQuery({
@@ -728,128 +760,86 @@ export default function CustomersPage() {
       </div>
 
       {/* Customer List */}
-      {isLoading ? (
-        <div className="px-6 space-y-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="h-20 fcim-skeleton !mx-0"
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="px-6 space-y-3 pb-32">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-black text-muted uppercase tracking-widest">
-              Showing {customers.length} of {totalCount} customers
-            </p>
+      <div className="px-6 space-y-4 pb-32">
+        {isLoading ? (
+          [1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-surface border border-border rounded-3xl animate-pulse" />
+          ))
+        ) : customers.length === 0 ? (
+          <div className="py-20 text-center bg-surface border border-dashed border-border rounded-3xl">
+            <User className="w-12 h-12 text-muted/20 mx-auto mb-4" />
+            <p className="text-muted font-bold uppercase tracking-widest text-xs">No customers yet</p>
           </div>
-          
-          {customers.length === 0 ? (
-            <div className="p-10 text-center bg-surface rounded-3xl border border-dashed border-border">
-              <User className="w-12 h-12 text-muted mx-auto mb-4" />
-              <p className="text-muted font-bold uppercase tracking-widest text-sm">
-                {searchQuery || minDebt || maxDebt ? "No matching customers" : "No customers yet."}
-              </p>
-              {!searchQuery && !minDebt && !maxDebt && (
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="mt-4 text-foreground font-black underline decoration-2 underline-offset-4"
-                >
-                  Add your first customer
-                </button>
+        ) : (
+          customers.map((c: Customer) => (
+            <motion.div
+              key={c._id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={() => setSelectedCustomer(c)}
+              className={cn(
+                "p-5 bg-surface border border-border rounded-3xl active:scale-[0.98] transition-all cursor-pointer flex items-center justify-between group",
+                selectedCustomer?._id === c._id && "border-accent ring-4 ring-accent/5 shadow-xl"
               )}
-            </div>
-          ) : (
-            customers.map((c: Customer) => (
-              <div
-                key={c._id}
-                className="fcim-list-card !mx-0"
-              >
-                <div
-                  className="flex items-center gap-4 flex-1 min-w-0"
-                  onClick={() => setSelectedCustomer(c)}
-                >
-                  <div className="p-3 bg-elevated rounded-xl text-muted flex-shrink-0">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-bold text-foreground text-base leading-none truncate">
-                      {c.name}
-                    </p>
-                    <p className="text-xs text-muted font-bold uppercase tracking-widest mt-1">
-                      {c.phone || c.email || c.tag || "No contact"}
-                    </p>
-                  </div>
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-elevated rounded-2xl flex items-center justify-center text-muted group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                  <User className="w-7 h-7" />
                 </div>
-                <div className="flex items-center gap-3 ml-2">
-                  <div
-                    className="text-right cursor-pointer"
-                    onClick={() => setSelectedCustomer(c)}
-                  >
-                    <p
-                      className={cn(
-                        "font-black text-base leading-none font-syne",
-                        c.outstandingBalance > 0
-                          ? "text-danger"
-                          : "text-success",
-                      )}
-                    >
-                      {formatCurrency(c.outstandingBalance)}
-                    </p>
-                    <p className="text-[10px] text-muted uppercase font-black tracking-widest mt-1">
-                      {c.outstandingBalance > 0 ? "Owed" : "Balance"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditCustomer(c);
-                      }}
-                      className="p-2 bg-elevated rounded-lg text-muted hover:text-foreground transition-colors"
-                      title="Edit customer"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteCustomer(c);
-                      }}
-                      className="p-2 bg-danger/10 rounded-lg text-danger hover:text-danger/80 transition-colors"
-                      title="Delete customer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                <div>
+                  <h3 className="font-black text-foreground text-lg leading-none font-syne uppercase">
+                    {c.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="px-2 py-0.5 bg-elevated text-muted text-[10px] font-black uppercase tracking-widest rounded-md">
+                      {c.tag || "Standard"}
+                    </span>
+                    {c.lastTransactionDate && (
+                      <span className="text-[10px] text-muted font-bold">
+                        • {formatDistanceToNow(new Date(c.lastTransactionDate))} ago
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      )}
+
+              <div className="text-right">
+                <p className={cn(
+                  "text-xl font-black font-syne",
+                  c.outstandingBalance > 0 ? "text-danger" : "text-success"
+                )}>
+                  {formatCurrency(c.outstandingBalance)}
+                </p>
+                <p className="text-[10px] font-black text-muted uppercase tracking-widest mt-1">
+                  Balance
+                </p>
+              </div>
+            </motion.div>
+          ))
+        )}
+      </div>
 
       {/* Transaction History Sheet */}
       <AnimatePresence>
         {selectedCustomer && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-4">
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              className="w-full max-w-lg bg-white rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="w-full max-w-lg bg-surface rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-border"
             >
-              <div className="p-6 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div className="p-6 border-b border-border flex items-center justify-between sticky top-0 bg-surface z-10">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-slate-900 text-white rounded-2xl">
+                  <div className="p-3 bg-foreground text-background rounded-2xl">
                     <User className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-slate-900 leading-none">
+                    <h2 className="text-lg font-black text-foreground leading-none font-syne uppercase">
                       {selectedCustomer.name}
                     </h2>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    <p className="text-xs text-muted font-bold uppercase tracking-widest mt-1">
                       {selectedCustomer.phone ||
                         selectedCustomer.email ||
                         selectedCustomer.tag ||
@@ -863,31 +853,31 @@ export default function CustomersPage() {
                       setEditCustomer(selectedCustomer);
                       setSelectedCustomer(null);
                     }}
-                    className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 transition-colors"
+                    className="p-2 bg-elevated rounded-xl text-muted hover:text-foreground transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setSelectedCustomer(null)}
-                    className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 transition-colors"
+                    className="p-2 bg-elevated rounded-xl text-muted hover:text-foreground transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 space-y-3 pb-10">
+              <div className="flex-1 overflow-y-auto p-5 space-y-3 pb-10 bg-background">
                 {/* Balance card */}
-                <div className="bg-slate-900 p-5 rounded-[28px] text-white flex justify-between items-center shadow-xl">
+                <div className="bg-foreground p-5 rounded-[28px] text-background flex justify-between items-center shadow-xl">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                      Current Balance
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                      Outstanding Balance
                     </p>
-                    <p className="text-3xl font-black mt-1 leading-none">
+                    <p className="text-3xl font-black mt-1 leading-none font-syne">
                       {formatCurrency(selectedCustomer.outstandingBalance)}
                     </p>
                   </div>
-                  <div className="bg-white/10 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest">
+                  <div className="bg-background/10 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest">
                     {selectedCustomer.outstandingBalance > 0
                       ? "Owed"
                       : "Settled"}
@@ -898,27 +888,27 @@ export default function CustomersPage() {
                 {(selectedCustomer.phone ||
                   selectedCustomer.email ||
                   selectedCustomer.address) && (
-                  <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
+                  <div className="bg-surface rounded-2xl p-4 space-y-2 border border-border">
                     {selectedCustomer.phone && (
                       <div className="flex items-center gap-3 text-sm">
-                        <Phone className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-700 font-medium">
+                        <Phone className="w-4 h-4 text-muted" />
+                        <span className="text-foreground font-medium">
                           {selectedCustomer.phone}
                         </span>
                       </div>
                     )}
                     {selectedCustomer.email && (
                       <div className="flex items-center gap-3 text-sm">
-                        <Mail className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-700 font-medium">
+                        <Mail className="w-4 h-4 text-muted" />
+                        <span className="text-foreground font-medium">
                           {selectedCustomer.email}
                         </span>
                       </div>
                     )}
                     {selectedCustomer.address && (
                       <div className="flex items-center gap-3 text-sm">
-                        <MapPin className="w-4 h-4 text-slate-400" />
-                        <span className="text-slate-700 font-medium">
+                        <MapPin className="w-4 h-4 text-muted" />
+                        <span className="text-foreground font-medium">
                           {selectedCustomer.address}
                         </span>
                       </div>
@@ -927,7 +917,7 @@ export default function CustomersPage() {
                 )}
 
                 {/* Transactions */}
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest pt-2">
+                <h3 className="text-xs font-black text-muted uppercase tracking-widest pt-2">
                   Transaction History
                 </h3>
 
@@ -936,14 +926,14 @@ export default function CustomersPage() {
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="h-20 bg-slate-50 rounded-2xl animate-pulse"
+                        className="h-20 bg-surface rounded-2xl animate-pulse border border-border"
                       />
                     ))}
                   </div>
                 ) : history?.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
+                  <div className="py-16 text-center bg-surface border border-dashed border-border rounded-3xl">
+                    <Calendar className="w-12 h-12 text-muted/20 mx-auto mb-4" />
+                    <p className="text-muted font-bold uppercase tracking-widest text-xs">
                       No transactions yet
                     </p>
                   </div>
@@ -951,17 +941,17 @@ export default function CustomersPage() {
                   history?.map((t: any) => (
                     <div
                       key={t._id}
-                      className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm"
+                      className="flex items-center justify-between p-4 bg-surface rounded-2xl border border-border shadow-sm"
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
                             "p-3 rounded-xl",
                             t.type === "credit"
-                              ? "bg-rose-50 text-rose-500"
+                              ? "bg-danger/10 text-danger"
                               : t.type === "payment"
-                                ? "bg-emerald-50 text-emerald-500"
-                                : "bg-blue-50 text-blue-500",
+                                ? "bg-success/10 text-success"
+                                : "bg-accent/10 text-accent",
                           )}
                         >
                           {t.type === "credit" ? (
@@ -973,10 +963,10 @@ export default function CustomersPage() {
                           )}
                         </div>
                         <div>
-                          <p className="font-black text-slate-900 text-base leading-none capitalize">
+                          <p className="font-black text-foreground text-base leading-none capitalize font-syne">
                             {t.type}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                          <p className="text-[10px] text-muted font-black uppercase tracking-widest mt-1">
                             {formatDistanceToNow(new Date(t.createdAt), {
                               addSuffix: true,
                             })}
@@ -987,18 +977,16 @@ export default function CustomersPage() {
                         <div className="text-right">
                           <p
                             className={cn(
-                              "font-black text-lg leading-none",
+                              "font-black text-lg leading-none font-syne",
                               t.type === "credit"
-                                ? "text-rose-600"
-                                : t.type === "payment"
-                                  ? "text-emerald-600"
-                                  : "text-blue-600",
+                                ? "text-danger"
+                                : "text-success",
                             )}
                           >
                             {t.type === "credit" ? "-" : "+"}
                             {formatCurrency(t.totalAmount)}
                           </p>
-                          <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mt-1">
+                          <p className="text-[10px] text-muted uppercase font-black tracking-widest mt-1">
                             {t.items?.length > 0
                               ? `${t.items.length} Items`
                               : "Direct"}
@@ -1007,15 +995,17 @@ export default function CustomersPage() {
                         <div className="flex flex-col gap-1">
                           <button
                             onClick={() => handleReceiptView(t)}
-                            className="p-1.5 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-900 transition-colors"
+                            className="p-1.5 bg-elevated rounded-lg text-muted hover:text-foreground transition-colors"
+                            title="View Receipt"
                           >
-                            <Receipt className="w-3.5 h-3.5" />
+                            <Receipt className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleShareWhatsApp(t)}
-                            className="p-1.5 bg-emerald-50 rounded-lg text-emerald-500 hover:text-emerald-700 transition-colors"
+                            className="p-1.5 bg-success/10 rounded-lg text-success hover:bg-success/20 transition-colors"
+                            title="Share Receipt"
                           >
-                            <Share2 className="w-3.5 h-3.5" />
+                            <Share2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -1031,19 +1021,19 @@ export default function CustomersPage() {
       {/* Receipt Viewer */}
       <AnimatePresence>
         {showReceiptForTx && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-4">
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-[60] flex items-end sm:items-center justify-center p-4">
             <motion.div
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="w-full max-w-lg bg-surface rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-border"
             >
-              <div className="flex items-center justify-between p-8 border-b border-slate-50 bg-white">
+              <div className="flex items-center justify-between p-8 border-b border-border bg-surface">
                 <div>
-                  <h2 className="font-black text-slate-900 text-xl tracking-tight">
+                  <h2 className="font-black text-foreground text-xl tracking-tight font-syne uppercase">
                     Receipt
                   </h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5">
+                  <p className="text-[10px] text-muted font-bold uppercase tracking-[0.2em] mt-0.5">
                     Official Record •{" "}
                     {selectedTxForReceipt?._id?.substring(0, 8).toUpperCase()}
                   </p>
@@ -1053,14 +1043,14 @@ export default function CustomersPage() {
                     setShowReceiptForTx(null);
                     setSelectedTxForReceipt(null);
                   }}
-                  className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200 transition-colors"
+                  className="p-2 bg-elevated text-muted rounded-full hover:text-foreground transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto bg-slate-50/50 p-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="flex-1 overflow-y-auto bg-background p-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
                   <iframe
                     srcDoc={showReceiptForTx}
                     className="w-full min-h-[500px] border-none"
@@ -1069,11 +1059,11 @@ export default function CustomersPage() {
                 </div>
               </div>
 
-              <div className="p-6 bg-white border-t border-slate-50 flex gap-3">
+              <div className="p-6 bg-surface border-t border-border flex gap-3">
                 <button
                   onClick={handleDownloadImage}
                   disabled={isDownloading}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-95"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all disabled:opacity-50"
                 >
                   {isDownloading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -1084,7 +1074,7 @@ export default function CustomersPage() {
                 </button>
                 <button
                   onClick={() => handleShareWhatsApp(selectedTxForReceipt)}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl text-sm font-black shadow-lg hover:bg-emerald-600 transition-all active:scale-95"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-success text-white rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all"
                 >
                   <Share2 className="w-4 h-4" />
                   Share Image
