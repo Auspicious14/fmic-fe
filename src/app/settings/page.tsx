@@ -85,7 +85,7 @@ export default function SettingsPage() {
 
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-3 p-5 bg-rose-50 text-rose-600 rounded-2xl font-bold text-lg mt-8 active:scale-[0.98] transition-transform"
+          className="w-full flex items-center justify-center gap-3 p-5 bg-danger/10 text-danger border border-danger/20 rounded-2xl font-bold text-lg mt-8 active:scale-[0.98] transition-transform"
         >
           <LogOut className="w-6 h-6" />
           Log Out

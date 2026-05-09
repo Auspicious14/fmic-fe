@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn(syne.className, dm_sans.className)}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <QueryProvider>
             <main className="min-h-screen bg-background text-foreground max-w-md mx-auto relative overflow-hidden border-x border-border/50">
               {children}

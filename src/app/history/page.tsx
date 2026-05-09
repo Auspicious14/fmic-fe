@@ -326,7 +326,7 @@ export default function HistoryPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto bg-background p-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden">
                   {loadingReceipt ? (
                     <div className="flex items-center justify-center min-h-[500px]">
                       <Loader2 className="w-8 h-8 animate-spin text-muted" />

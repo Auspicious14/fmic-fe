@@ -13,6 +13,19 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "@/shared/lib/api-client";
 
+interface SummaryBreakdownItem {
+  _id: string;
+  count: number;
+}
+
+interface DailySummary {
+  totalCredit?: number;
+  totalRevenue?: number;
+  totalTransactions?: number;
+  uniqueCustomers?: number;
+  breakdown?: SummaryBreakdownItem[];
+}
+
 function MiniBar({
   value,
   max,
@@ -43,7 +56,7 @@ export function SummaryCards() {
     queryKey: ["daily-summary"],
     queryFn: async () => {
       const response = await apiClient.get("/transactions/daily-summary");
-      return response.data;
+      return response.data as DailySummary;
     },
     refetchInterval: 60_000, // refresh every minute
   });
@@ -58,7 +71,7 @@ export function SummaryCards() {
     {
       label: "Today's Credit",
       value: creditTotal,
-      subLabel: `${summary?.breakdown?.find((b: any) => b._id === "credit")?.count || 0} transactions`,
+      subLabel: `${summary?.breakdown?.find((b) => b._id === "credit")?.count || 0} transactions`,
       icon: TrendingUp,
       color: "text-danger",
       bg: "bg-danger/10",
@@ -70,7 +83,7 @@ export function SummaryCards() {
     {
       label: "Today's Payments",
       value: revenueTotal,
-      subLabel: `${summary?.breakdown?.find((b: any) => b._id === "payment")?.count || 0} transactions`,
+      subLabel: `${summary?.breakdown?.find((b) => b._id === "payment")?.count || 0} transactions`,
       icon: TrendingDown,
       color: "text-success",
       bg: "bg-success/10",
@@ -134,14 +147,13 @@ export function SummaryCards() {
       <div className={cn(
         "relative overflow-hidden rounded-[32px] p-6 shadow-lg border transition-all active:scale-[0.98]",
         revenueTotal >= creditTotal 
-          ? "bg-foreground text-background border-transparent" 
+          ? "bg-surface border-success/20" 
           : "bg-surface border-danger/20"
       )}>
         <div className="relative z-10 flex items-start justify-between">
           <div>
             <p className={cn(
-              "text-[10px] font-black uppercase tracking-[0.2em] opacity-60",
-              revenueTotal < creditTotal && "text-muted"
+              "text-[10px] font-black uppercase tracking-[0.2em] text-muted"
             )}>
               Consolidated Net Position
             </p>
@@ -162,8 +174,7 @@ export function SummaryCards() {
                 {revenueTotal >= creditTotal ? "Surplus Position" : "Deficit Position"}
               </div>
               <p className={cn(
-                "text-[10px] font-bold opacity-40",
-                revenueTotal < creditTotal && "text-muted"
+                "text-[10px] font-bold text-muted"
               )}>
                 Live Ledger Balance
               </p>
@@ -171,7 +182,7 @@ export function SummaryCards() {
           </div>
           <div className={cn(
             "w-12 h-12 rounded-2xl flex items-center justify-center",
-            revenueTotal >= creditTotal ? "bg-background/10" : "bg-danger/10"
+            revenueTotal >= creditTotal ? "bg-success/10" : "bg-danger/10"
           )}>
             <Activity className={cn("w-6 h-6", revenueTotal >= creditTotal ? "text-success" : "text-danger")} />
           </div>

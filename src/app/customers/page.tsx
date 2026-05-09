@@ -868,16 +868,22 @@ export default function CustomersPage() {
 
               <div className="flex-1 overflow-y-auto p-5 space-y-3 pb-10 bg-background">
                 {/* Balance card */}
-                <div className="bg-foreground p-5 rounded-[28px] text-background flex justify-between items-center shadow-xl">
+                <div className="bg-surface border border-border p-5 rounded-[28px] text-foreground flex justify-between items-center shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">
                       Outstanding Balance
                     </p>
-                    <p className="text-3xl font-black mt-1 leading-none font-syne">
+                    <p className={cn(
+                      "text-3xl font-black mt-1 leading-none font-syne",
+                      selectedCustomer.outstandingBalance > 0 ? "text-danger" : "text-success"
+                    )}>
                       {formatCurrency(selectedCustomer.outstandingBalance)}
                     </p>
                   </div>
-                  <div className="bg-background/10 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest">
+                  <div className={cn(
+                    "px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest",
+                    selectedCustomer.outstandingBalance > 0 ? "bg-danger/10 text-danger" : "bg-success/10 text-success"
+                  )}>
                     {selectedCustomer.outstandingBalance > 0
                       ? "Owed"
                       : "Settled"}
@@ -1050,7 +1056,7 @@ export default function CustomersPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto bg-background p-4">
-                <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
+                <div className="bg-surface rounded-2xl shadow-sm border border-border overflow-hidden">
                   <iframe
                     srcDoc={showReceiptForTx}
                     className="w-full min-h-[500px] border-none"

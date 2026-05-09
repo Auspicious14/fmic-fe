@@ -215,7 +215,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -224,18 +224,18 @@ import {
   Mic,
   Square,
   Loader2,
-  Plus,
-  CheckCheck,
-  TrendingUp,
 } from "lucide-react";
 import { ThemeToggle } from "@/shared/ui/ThemeToggle";
-import { useVoiceCapture } from "@/modules/voice/hooks/useVoiceCapture";
+import {
+  useVoiceCapture,
+  type RecordingState,
+} from "@/modules/voice/hooks/useVoiceCapture";
 import { SummaryCards } from "@/modules/dashboard/components/SummaryCards";
 import { RecentActivity } from "@/modules/dashboard/components/RecentActivity";
 import { InterpretationPreview } from "@/modules/voice/components/InterpretationPreview";
 import { BottomNav } from "@/shared/ui/BottomNav";
 import apiClient from "@/shared/lib/api-client";
-import { avatarPalette, formatNaira, todayLabel, cn } from "@/shared/lib/utils";
+import { todayLabel, cn } from "@/shared/lib/utils";
 import { CustomerChip } from "@/modules/dashboard/components/CustomerChip";
 import { Customer } from "@/shared/types";
 
@@ -248,7 +248,7 @@ interface Transaction {
     customerId?: string;
     tag?: string;
   };
-  items: any[];
+  items: VoiceTransactionItem[];
   total_amount: number;
   amount?: number;
   transaction_type: string;
@@ -264,27 +264,69 @@ interface VoiceResult {
   confirmationAudio?: string | null;
 }
 
+interface VoiceTransactionItem {
+  product_name: string;
+  product_id?: string;
+  quantity: number;
+  unit_price: number;
+}
+
+interface AppUser {
+  name?: string;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  return fallback;
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+  ) {
+    return error.response.data.message;
+  }
+
+  return getErrorMessage(error, fallback);
+}
 
 
-type VoiceState = "idle" | "recording" | "processing";
 
 function VoiceButton({
   state,
   onClick,
-  recordingDuration,
+  durationMs,
+  levelHint,
 }: {
-  state: VoiceState;
+  state: RecordingState;
   onClick: () => void;
-  recordingDuration: number;
+  durationMs: number;
+  levelHint: string;
 }) {
   const isRecording = state === "recording";
-  const isProcessing = state === "processing";
+  const isProcessing =
+    state === "requesting_permission" ||
+    state === "processing" ||
+    state === "uploading";
 
   let hint = "Tap to speak";
+  if (state === "requesting_permission") hint = "Opening mic...";
   if (isRecording) hint = "Tap to stop";
-  if (isProcessing) hint = "Processing...";
+  if (state === "too_short") hint = "Speak again";
+  if (state === "too_noisy") hint = "Move closer";
+  if (state === "ready_to_upload") hint = "Preparing...";
+  if (state === "uploading" || state === "processing") hint = "Processing...";
 
-  let btnStyle: React.CSSProperties = {
+  const btnStyle: React.CSSProperties = {
     width: 72,
     height: 72,
     borderRadius: "50%",
@@ -303,7 +345,7 @@ function VoiceButton({
         <div className="fcim-recording-row">
           <div className="fcim-rec-dot" />
           <span className="fcim-rec-label">
-            Recording {recordingDuration}s
+            {levelHint} · {Math.ceil(durationMs / 1000)}s
           </span>
         </div>
       )}
@@ -312,7 +354,7 @@ function VoiceButton({
         style={btnStyle}
         onClick={onClick}
         disabled={isProcessing}
-        className={isRecording ? "btn-pulse" : ""}
+        className={cn("text-background", isRecording && "btn-pulse")}
       >
         {isProcessing ? (
           <Loader2
@@ -323,7 +365,7 @@ function VoiceButton({
         ) : isRecording ? (
           <Square size={24} fill="#fff" stroke="#fff" />
         ) : (
-          <Mic size={28} stroke="#0A0A0A" strokeWidth={2} />
+          <Mic size={28} stroke="currentColor" strokeWidth={2} />
         )}
       </button>
 
@@ -337,7 +379,7 @@ function VoiceButton({
 export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [topCustomers, setTopCustomers] = useState<Customer[]>([]);
 
   const [dashboardTab, setDashboardTab] = useState<"activity" | "debtors">("activity");
@@ -345,16 +387,18 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
   }, []);
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [recordingDuration, setRecordingDuration] = useState(0);
   const [interpretation, setInterpretation] = useState<VoiceResult | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [confirmedTransactions, setConfirmedTransactions] = useState<number[]>([]);
   const [isConfirming, setIsConfirming] = useState(false);
+  const lastUploadedBlob = useRef<Blob | null>(null);
 
   const {
-    isRecording,
-    isProcessing,
+    audioBlob,
+    durationMs,
+    recordingState,
+    levelHint,
+    errorMessage,
     startRecording,
     stopRecording,
     processAudio,
@@ -382,72 +426,93 @@ export default function Home() {
       .catch(() => {});
   }, [user]);
 
-  // ── Recording timer ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isRecording) {
-      setRecordingDuration(0);
-      return;
-    }
-    const interval = setInterval(
-      () => setRecordingDuration((d) => d + 1),
-      1000
-    );
-    return () => clearInterval(interval);
-  }, [isRecording]);
-
   // ── Voice toggle ─────────────────────────────────────────────────────────────
   const handleVoiceToggle = useCallback(async () => {
-    if (voiceState === "idle") {
+    if (recordingState === "recording") {
       try {
-        await startRecording();
-        setVoiceState("recording");
-      } catch (err: any) {
-        toast.error(err.message ?? "Could not access microphone");
+        await stopRecording();
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err, "Recording failed"));
       }
       return;
     }
 
-    if (voiceState === "recording") {
-      try {
-        const audioBlob = await stopRecording();
-        setVoiceState("processing");
+    if (
+      recordingState === "requesting_permission" ||
+      recordingState === "ready_to_upload" ||
+      recordingState === "uploading" ||
+      recordingState === "processing"
+    ) {
+      return;
+    }
 
+    try {
+      await startRecording();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Could not access microphone"));
+    }
+  }, [
+    recordingState,
+    startRecording,
+    stopRecording,
+  ]);
+
+  useEffect(() => {
+    if (recordingState === "too_short") {
+      toast.info("Speak again. That clip was too short.");
+    }
+    if (recordingState === "too_noisy") {
+      toast.error("Too much noise. Move the phone closer and try again.");
+    }
+    if (recordingState === "error" && errorMessage) {
+      toast.error(errorMessage);
+    }
+  }, [recordingState, errorMessage]);
+
+  useEffect(() => {
+    if (
+      recordingState !== "ready_to_upload" ||
+      !audioBlob ||
+      lastUploadedBlob.current === audioBlob
+    ) {
+      return;
+    }
+
+    lastUploadedBlob.current = audioBlob;
+
+    const uploadAudio = async () => {
+      try {
         const result: VoiceResult = await processAudio(audioBlob);
         const firstIntent = result.transactions?.[0]?.intent;
 
         if (!result.transactions?.length || firstIntent === "UNCLEAR") {
-          // Play "try again" audio confirmation if available
           if (result.confirmationAudio) {
             await playAudioBase64(result.confirmationAudio).catch(() => {});
           } else {
             const lang = result.detectedLanguage === "yo" ? "yo-NG" : "pcm-NG";
-            await playTTS(
-              "I no hear you well. Abeg talk again.",
-              lang
-            ).catch(() => {});
+            await playTTS("I no hear you well. Abeg talk again.", lang).catch(
+              () => {},
+            );
           }
           toast.error("I no hear you well. Abeg talk again.");
-          setVoiceState("idle");
           return;
         }
 
         setInterpretation(result);
         setShowPreview(true);
 
-        // Auto-play confirmation audio — already in response, no extra call
         if (result.confirmationAudio) {
           await playAudioBase64(result.confirmationAudio).catch(() => {});
         }
-      } catch (err: any) {
-        toast.error(err.message ?? "Failed to process audio");
-      } finally {
-        setVoiceState("idle");
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err, "Failed to process audio"));
       }
-    }
+    };
+
+    void uploadAudio();
   }, [
-    voiceState,
-    startRecording,
-    stopRecording,
+    audioBlob,
+    recordingState,
     processAudio,
     playAudioBase64,
     playTTS,
@@ -492,7 +557,7 @@ export default function Home() {
 
         await apiClient.post("/transactions", {
           customerId: finalCustomerId,
-          items: tx.items.map((item: any) => ({
+          items: tx.items.map((item) => ({
             productName: item.product_name,
             productId: item.product_id,
             quantity: item.quantity,
@@ -525,10 +590,8 @@ export default function Home() {
 
           setTimeout(() => window.location.reload(), 800);
         }
-      } catch (error: any) {
-        toast.error(
-          error.response?.data?.message ?? "Failed to save transaction"
-        );
+      } catch (error: unknown) {
+        toast.error(getApiErrorMessage(error, "Failed to save transaction"));
       } finally {
         setIsConfirming(false);
       }
@@ -663,9 +726,10 @@ export default function Home() {
       </div>
 
       <VoiceButton
-        state={voiceState}
+        state={recordingState}
         onClick={handleVoiceToggle}
-        recordingDuration={recordingDuration}
+        durationMs={durationMs}
+        levelHint={levelHint}
       />
 
       {interpretation && (

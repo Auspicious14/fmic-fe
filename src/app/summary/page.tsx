@@ -368,9 +368,9 @@ export default function SummaryPage() {
             </div>
 
             {/* Net Position Summary */}
-            <div className="bg-foreground rounded-[32px] p-8 text-background flex flex-col justify-between">
+            <div className="bg-surface border border-border rounded-[32px] p-8 text-foreground flex flex-col justify-between shadow-sm">
               <div>
-                <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.2em] mb-4">
+                <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-4">
                   Consolidated Net Position
                 </p>
                 <p
@@ -381,13 +381,13 @@ export default function SummaryPage() {
                 >
                   {formatCurrency(Math.abs(netPosition))}
                 </p>
-                <p className="text-[10px] font-bold opacity-40 mt-3 flex items-center gap-2">
+                <p className="text-[10px] font-bold text-muted mt-3 flex items-center gap-2">
                   {netPosition >= 0 ? <TrendingUp size={12}/> : <TrendingDown size={12}/>}
                   {netPosition >= 0 ? "SURPLUS POSITION" : "DEFICIT POSITION"}
                 </p>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-background/10">
+              <div className="mt-8 pt-6 border-t border-border">
                 <button
                   onClick={handleVerifyIntegrity}
                   disabled={verifying}
@@ -398,11 +398,11 @@ export default function SummaryPage() {
                       <Shield className="w-3 h-3 text-accent" />
                       Verify Integrity
                     </p>
-                    <p className="text-[10px] font-bold opacity-40 mt-1">
+                    <p className="text-[10px] font-bold text-muted mt-1">
                       Run ledger audit check
                     </p>
                   </div>
-                  <div className="p-2 bg-background/10 rounded-xl group-active:scale-90 transition-transform">
+                  <div className="p-2 bg-elevated rounded-xl group-active:scale-90 transition-transform">
                     {verifying ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
