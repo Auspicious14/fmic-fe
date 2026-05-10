@@ -1,10 +1,10 @@
 import { formatCurrency, cn } from "@/shared/lib/utils";
-import { Customer } from "@/shared/types";
-import { Avatar } from "@/shared/ui/Avatar";
+import { Customer } from "@/modules/customers/index";
+import { Avatar } from "@/components/ui/Avatar";
 import { ChevronRight } from "lucide-react";
 
 export function CustomerChip({ customer }: { customer: Customer }) {
-  const balance = customer.totalDebt ?? customer.outstandingBalance ?? 0;
+  const balance = customer.outstandingBalance ?? 0;
   const isPaid = balance <= 0;
   
   return (

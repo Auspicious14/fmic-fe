@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Button } from '@/shared/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { formatCurrency } from '@/shared/lib/utils';
 import { Check, X, User, ShoppingBag, CreditCard, AlertCircle, UserPlus, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

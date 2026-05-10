@@ -1,14 +1,9 @@
+import { type AudioQuality } from "../index";
+export type { AudioQuality };
+
 export const MIN_RECORDING_MS = 700;
 export const MAX_RECORDING_MS = 9000;
 export const NOISE_SAMPLE_MS = 500;
-
-export interface AudioQuality {
-  noiseFloor: number;
-  speechLevel: number;
-  snr: number;
-  isTooNoisy: boolean;
-  isTooShort: boolean;
-}
 
 export function calculateRms(samples: Float32Array | number[]): number {
   if (!samples.length) return 0;

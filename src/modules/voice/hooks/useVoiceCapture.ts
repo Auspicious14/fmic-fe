@@ -50,6 +50,34 @@ const DEFAULT_QUALITY: AudioQuality = {
   isTooShort: false,
 };
 
+export interface VoiceResult {
+  transactions: Array<{
+    intent: string;
+    resolvedCustomer: {
+      name: string;
+      isNew: boolean;
+      isAmbiguous: boolean;
+      customerId?: string;
+      tag?: string;
+    };
+    items: Array<{
+      product_name: string;
+      product_id?: string;
+      quantity: number;
+      unit_price: number;
+    }>;
+    total_amount: number;
+    amount?: number;
+    transaction_type: string;
+    confidence_score: number;
+    reasoning_summary: string;
+    voice_confirmation: string;
+  }>;
+  overall_transcript: string;
+  detectedLanguage?: "yo" | "en" | "mixed";
+  confirmationAudio?: string | null;
+}
+
 export function useVoiceCapture() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
