@@ -33,9 +33,10 @@ export default function CustomersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
 
-  const { data: customers, isLoading } = useCustomers();
+  const { data, isLoading } = useCustomers();
   const { deleteMutation } = useCustomerMutations();
-
+  const customers = data?.customers
+  
   const filteredCustomers = customers?.filter((c) =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.phone?.includes(searchTerm) ||

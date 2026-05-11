@@ -88,14 +88,14 @@ export function ReceiptModal({
   return (
     <AnimatePresence>
       {isOpen && receiptHtml && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-md z-500! flex items-end sm:items-center justify-center">
           <motion.div
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
-            className="w-full max-w-lg bg-surface rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-border"
+            className="w-full max-w-lg rounded-t-[20px] sm:rounded-[20px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-border"
           >
-            <div className="flex items-center justify-between p-6 border-b border-border bg-surface">
+            <div className="flex items-center justify-between border-b border-border bg-surface px-4! py-2!">
               <div>
                 <h2 className="font-black text-foreground text-xl tracking-tight font-syne uppercase">
                   Receipt
@@ -138,18 +138,18 @@ export function ReceiptModal({
               </div>
             </div>
 
-            <div className="p-6 bg-surface border-t border-border flex gap-3">
+            <div className="px-4! py-2! bg-surface border-t border-border flex gap-3">
               <button
                 onClick={handleDownloadImage}
                 disabled={isDownloading || isLoading}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-foreground text-background rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-6! py-4! bg-foreground text-background rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all disabled:opacity-50"
               >
                 <Download className="w-4 h-4" /> Download
               </button>
               <button
                 onClick={handleShareImage}
                 disabled={isDownloading || isLoading}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-accent text-background rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-6! py-4! bg-accent text-background rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all disabled:opacity-50"
               >
                 <Share2 className="w-4 h-4" /> Share
               </button>

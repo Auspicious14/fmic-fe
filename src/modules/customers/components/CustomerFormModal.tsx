@@ -78,7 +78,7 @@ export function CustomerFormModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 bg-background/50 backdrop-blur-sm z-500! flex items-end sm:items-center justify-center p-4">
           <motion.div 
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

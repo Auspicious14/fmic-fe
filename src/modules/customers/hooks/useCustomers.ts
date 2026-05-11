@@ -4,11 +4,14 @@ import { Customer, CustomerFormData } from "../index";
 import { toast } from "sonner";
 
 export function useCustomers() {
-  return useQuery<Customer[]>({
+  return useQuery<{customers: Customer[], total: number}>({
     queryKey: ["customers"],
     queryFn: async () => {
       const response = await apiClient.get("/customers");
-      return response.data;
+      return {
+        customers: response.data.customers,
+        total: response?.data?.total,
+      };
     },
   });
 }
@@ -57,6 +60,9 @@ export function useCustomerMutations(onSuccess?: () => void) {
     createMutation,
     updateMutation,
     deleteMutation,
-    isLoading: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    isLoading:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
   };
 }
