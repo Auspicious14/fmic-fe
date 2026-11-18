@@ -328,7 +328,7 @@ export function useVoiceCapture() {
       form.append("audio", audio, `voice.${mimeToExt(audio.type)}`);
 
       setRecordingState("processing");
-      const response = await apiClient.post("/api/voice/ingest-audio", form, {
+      const response = await apiClient.post("/voice/ingest-audio", form, {
         timeout: 90000,
       });
       return response.data;
