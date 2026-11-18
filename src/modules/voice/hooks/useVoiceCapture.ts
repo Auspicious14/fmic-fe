@@ -11,6 +11,7 @@ import {
   NOISE_SAMPLE_MS,
   type AudioQuality,
 } from "@/modules/voice/lib/audio-quality";
+import { convertToWav16kMono } from "@/modules/voice/lib/to-wav";
 
 export type RecordingState =
   | "idle"
@@ -36,6 +37,7 @@ const SUPPORTED_MIME_TYPES = [
   "audio/webm;codecs=opus",
   "audio/webm",
   "audio/ogg",
+  "audio/mp4", // Safari / iPhone
 ];
 
 interface WebKitAudioWindow extends Window {
@@ -74,7 +76,7 @@ export interface VoiceResult {
     voice_confirmation: string;
   }>;
   overall_transcript: string;
-  detectedLanguage?: "yo" | "en" | "mixed";
+  detectedLanguage?: "yo" | "en" | "pcm" | "mixed";
   confirmationAudio?: string | null;
 }
 
@@ -324,8 +326,17 @@ export function useVoiceCapture() {
     setIsProcessing(true);
     setRecordingState("uploading");
     try {
+      // Send WAV so the server needs no ffmpeg. If conversion fails for any
+      // reason, upload the original recording instead.
+      let upload = audio;
+      try {
+        upload = await convertToWav16kMono(audio);
+      } catch (conversionError) {
+        console.warn("WAV conversion failed, sending original audio", conversionError);
+      }
+
       const form = new FormData();
-      form.append("audio", audio, `voice.${mimeToExt(audio.type)}`);
+      form.append("audio", upload, `voice.${mimeToExt(upload.type)}`);
 
       setRecordingState("processing");
       const response = await apiClient.post("/voice/ingest-audio", form, {
