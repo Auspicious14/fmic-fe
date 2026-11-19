@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/shared/lib/api-client';
 import { toast } from 'sonner';
+import { WhatsappLink } from './WhatsappLink';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -18,7 +19,6 @@ export default function SettingsPage() {
     const fetchProfile = async () => {
       try {
         const response = await apiClient.get('/auth/profile');
-        console.log({response})
         setProfile(response.data);
       } catch (error) {
         console.error('Failed to fetch profile:', error);
@@ -55,6 +55,13 @@ export default function SettingsPage() {
       </header>
 
       <div className="px-6 space-y-4">
+        {!isLoading && (
+          <WhatsappLink
+            linkedPhone={profile?.whatsappPhone}
+            onLinked={(whatsappPhone) => setProfile((p: any) => ({ ...p, whatsappPhone }))}
+          />
+        )}
+
         <div className="flex items-center justify-between p-5 bg-surface rounded-2xl border border-border shadow-sm active:scale-[0.98] transition-transform">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-elevated rounded-xl text-muted">

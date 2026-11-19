@@ -1,11 +1,11 @@
 {
-  "name": "FMIC | Financial Memory",
-  "short_name": "FMIC",
-  "description": "Financial Memory Layer for Informal Commerce",
-  "start_url": "/",
+  "name": "Ledga",
+  "short_name": "Ledga",
+  "description": "Your debt book, in your voice.",
+  "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#0f172a",
+  "background_color": "#13202E",
+  "theme_color": "#13202E",
   "icons": [
     {
       "src": "/icon-192.png",

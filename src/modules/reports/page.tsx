@@ -141,7 +141,7 @@ export default function SummaryPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `fmic-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.download = `ledga-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV Report exported!");

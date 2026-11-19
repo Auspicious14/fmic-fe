@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ledga">
+  <!-- A voice note (bubble + centred sound wave) on a ledger page (ruled lines + red margin) -->
+  <path d="M14 5h36a10 10 0 0 1 10 10v26a10 10 0 0 1-10 10H27l-13 9v-9a10 10 0 0 1-10-10V15A10 10 0 0 1 14 5z" fill="#F4A931"/>
+  <g fill="#13202E" opacity=".22">
+    <rect x="20" y="17" width="34" height="1.6" rx=".8"/>
+    <rect x="20" y="27.2" width="34" height="1.6" rx=".8"/>
+    <rect x="20" y="37.4" width="34" height="1.6" rx=".8"/>
+  </g>
+  <rect x="15" y="12" width="3" height="32" rx="1.5" fill="#D64541"/>
+  <g fill="#13202E">
+    <rect x="23" y="23" width="4.4" height="10" rx="2.2"/>
+    <rect x="29.6" y="16" width="4.4" height="24" rx="2.2"/>
+    <rect x="36.2" y="20" width="4.4" height="16" rx="2.2"/>
+    <rect x="42.8" y="14" width="4.4" height="28" rx="2.2"/>
+    <rect x="49.4" y="24" width="4.4" height="8" rx="2.2"/>
+  </g>
+</svg>

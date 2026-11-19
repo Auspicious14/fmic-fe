@@ -96,7 +96,7 @@ export function ReceiptModal({
         await navigator.share({
           files: [file],
           title: "Transaction Receipt",
-          text: "Here is your transaction receipt from FMIC.",
+          text: "Here is your receipt from Ledga.",
         });
       } else {
         const link = document.createElement("a");

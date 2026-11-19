@@ -517,3 +517,8 @@ input, textarea {
 .lang-badge.yo { background: color-mix(in srgb, var(--accent), transparent 90%); color: var(--accent); border: 0.5px solid color-mix(in srgb, var(--accent), transparent 80%); }
 .lang-badge.en { background: color-mix(in srgb, var(--success), transparent 90%); color: var(--success); border: 0.5px solid color-mix(in srgb, var(--success), transparent 80%); }
 .lang-badge.mixed { background: color-mix(in srgb, var(--muted), transparent 90%); color: var(--muted); border: 0.5px solid color-mix(in srgb, var(--muted), transparent 80%); }
+
+/* Ledga logo: light wordmark on the dark theme, dark wordmark on the light theme. */
+.ledga-logo-on-light { display: none; }
+.light .ledga-logo-on-dark { display: none; }
+.light .ledga-logo-on-light { display: block; }

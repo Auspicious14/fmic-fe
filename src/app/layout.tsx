@@ -1,33 +1,31 @@
 import type { Metadata, Viewport } from "next";
 import { Syne, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { Toaster } from 'sonner';
-import QueryProvider from '@/shared/lib/query-provider';
+import { Toaster } from "sonner";
+import QueryProvider from "@/shared/lib/query-provider";
+import { ThemeProvider } from "@/shared/lib/theme-provider";
 import { cn } from "@/shared/lib/utils";
 
-const syne = Syne({ subsets: ['latin']});
-const dm_sans = DM_Sans({subsets: ['latin']});
+const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
+const dm_sans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
-  title: "FMIC | Financial Memory",
-  description: "Financial Memory Layer for Informal Commerce",
+  title: "Ledga | Your debt book, in your voice",
+  description:
+    "Record credit sales with a voice note in Pidgin, Yoruba or English. Ledga keeps your debt book and sends your customer a receipt.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "FMIC",
+    title: "Ledga",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0A",
+  themeColor: "#13202E",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
-
-import { ThemeProvider } from '@/shared/lib/theme-provider';
 
 export default function RootLayout({
   children,
@@ -36,13 +34,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(syne.className, dm_sans.className)}>
+      <body
+        className={cn(
+          syne.variable,
+          dm_sans.variable,
+          syne.className,
+          dm_sans.className,
+        )}
+      >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <QueryProvider>
-            <main className="min-h-screen bg-background text-foreground max-w-md mx-auto relative overflow-hidden border-x border-border/50">
-              {children}
-              <Toaster position="top-center" richColors />
-            </main>
+            {children}
+            <Toaster position="top-center" richColors />
           </QueryProvider>
         </ThemeProvider>
       </body>

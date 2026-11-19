@@ -20,10 +20,11 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       const response = await apiClient.post('/auth/register', { name, shopName, email, password });
-      localStorage.setItem('fmic_token', response.data.accessToken);
+      localStorage.setItem('fmic_token', response.data.access_token);
       localStorage.setItem('fmic_user', JSON.stringify(response.data.user));
       toast.success('Registration successful!');
-      router.push('/login');
+      // Registration already returns a session, so go straight into the app.
+      router.push('/dashboard');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
     } finally {
@@ -35,8 +36,11 @@ export default function RegisterPage() {
     <div className="flex flex-col items-center justify-center min-h-screen px-6 bg-background">
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-black text-foreground tracking-tight font-syne uppercase">FMIC</h1>
-          <p className="text-muted font-medium mt-2">Financial Memory for Shop Owners</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ledga-logo-light.svg" alt="Ledga" className="ledga-logo-on-dark h-10 w-auto mx-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ledga-logo.svg" alt="" aria-hidden="true" className="ledga-logo-on-light h-10 w-auto mx-auto" />
+          <p className="text-muted font-medium mt-2">Your debt book, in your voice</p>
         </div>
 
         <Card className="p-8">
