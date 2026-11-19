@@ -165,6 +165,9 @@ export default function DashboardPage() {
 
         if (result.confirmationAudio) {
           await playAudioBase64(result.confirmationAudio).catch(() => {});
+        } else if (result.transactions[0]?.voice_confirmation) {
+          const lang = result.detectedLanguage === "yo" ? "yo-NG" : "pcm-NG";
+          await playTTS(result.transactions[0].voice_confirmation, lang).catch(() => {});
         }
       } catch (err: unknown) {
         toast.error(getErrorMessage(err, "Failed to process audio"));

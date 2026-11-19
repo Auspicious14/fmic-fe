@@ -378,16 +378,20 @@ export function useVoiceCapture() {
     }
   }, []);
 
-  // Fallback: fetch TTS on demand when confirmationAudio is null
+  // Fallback: fetch TTS on demand when confirmationAudio is null.
+  // If the server has no voice engine, use the phone's built-in voice (free,
+  // instant, works offline) so the trader always hears the confirmation.
   const playTTS = useCallback(async (
     text: string,
     lang: string = "pcm-NG"
   ): Promise<void> => {
     try {
       const response = await apiClient.post("/voice/tts", { text, lang });
+      if (!response.data?.audio) throw new Error("No audio returned");
       await playAudioBase64(response.data.audio);
     } catch (error) {
-      console.error("TTS playback failed:", error);
+      console.warn("Server TTS unavailable, using browser voice:", error);
+      await speakWithBrowserVoice(text, lang);
     }
   }, [playAudioBase64]);
 
@@ -421,4 +425,36 @@ function mimeToExt(mimeType: string): string {
     "video/webm": "webm",
   };
   return map[mimeType] ?? "webm";
+}
+
+/**
+ * Speaks text with the device's built-in voice (Web Speech API).
+ * Prefers a Yoruba voice for Yoruba, a Nigerian English voice for Pidgin,
+ * then any English voice. Resolves silently if speech isn't supported.
+ */
+function speakWithBrowserVoice(text: string, lang: string): Promise<void> {
+  if (typeof window === "undefined" || !("speechSynthesis" in window) || !text) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices();
+    const preferred = lang === "yo-NG" ? ["yo", "en-NG", "en"] : ["en-NG", "en-GB", "en"];
+    const voice = preferred
+      .map((code) => voices.find((v) => v.lang.toLowerCase().startsWith(code.toLowerCase())))
+      .find(Boolean);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    }
+    utterance.rate = 0.95;
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve();
+
+    synth.cancel(); // stop anything still playing
+    synth.speak(utterance);
+  });
 }
