@@ -13,7 +13,8 @@ export const NEW_CUSTOMER = "__new_customer__";
 interface InterpretationPreviewProps {
   data: any; // VoiceOutputDto containing transactions array
   isOpen: boolean;
-  onConfirm: (transactionIndex: number, customerId?: string) => void;
+  /** amountOverride: the total the trader typed when no price was heard. */
+  onConfirm: (transactionIndex: number, customerId?: string, amountOverride?: number) => void;
   onCancel: () => void;
   onEdit: (transactionIndex: number) => void;
   isLoading?: boolean;
@@ -21,14 +22,27 @@ interface InterpretationPreviewProps {
 
 export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdit, isLoading }: InterpretationPreviewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  // Totals typed by the trader for sales heard without a price, per entry.
+  const [typedTotals, setTypedTotals] = useState<Record<number, string>>({});
 
   if (!isOpen || !data?.transactions || data.transactions.length === 0) return null;
 
   const currentTx = data.transactions[currentIndex];
   const isLast = currentIndex === data.transactions.length - 1;
 
+  const needsPrice =
+    Boolean(currentTx.needs_price) ||
+    (currentTx.intent === 'CREDIT_SALE' && !(currentTx.total_amount > 0));
+  const typedTotal = Number((typedTotals[currentIndex] ?? '').replace(/[^\d.]/g, ''));
+  const priceMissing = needsPrice && !(typedTotal > 0);
+  const shownTotal = needsPrice ? (typedTotal > 0 ? typedTotal : 0) : currentTx.total_amount;
+  const warnings: string[] = (currentTx.warnings ?? []).filter(
+    (w: string) => !(needsPrice && w.startsWith('No price')),
+  );
+
   const handleNext = (customerId?: string) => {
-    onConfirm(currentIndex, customerId);
+    if (priceMissing) return; // never save a debt at ₦0
+    onConfirm(currentIndex, customerId, needsPrice ? typedTotal : undefined);
     if (!isLast) {
       setCurrentIndex(currentIndex + 1);
     }
@@ -87,6 +101,7 @@ export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdi
                         <button
                           key={match.id}
                           onClick={() => handleNext(match.id)}
+                          disabled={priceMissing}
                           className="w-full text-left p-3 rounded-xl border-2 border-border hover:border-success hover:bg-success/5 transition-all flex justify-between items-center group"
                         >
                           <span className="font-bold text-foreground group-hover:text-success">{match.name} {match.tag && `(${match.tag})`}</span>
@@ -95,6 +110,7 @@ export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdi
                       ))}
                       <button
                         onClick={() => handleNext(NEW_CUSTOMER)}
+                        disabled={priceMissing}
                         className="w-full text-left p-3 rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-all"
                       >
                         <span className="font-bold text-foreground">
@@ -136,7 +152,9 @@ export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdi
                           <p className="text-muted font-bold">
                             <span className="text-foreground font-black">{item.quantity}x</span> {item.product_name}
                           </p>
-                          <p className="font-black text-foreground">{formatCurrency(item.unit_price)}</p>
+                          <p className="font-black text-foreground">
+                            {needsPrice && !(item.unit_price > 0) ? '—' : formatCurrency(item.unit_price)}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -146,10 +164,54 @@ export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdi
 
               <div className="h-px bg-border my-4" />
 
+              {needsPrice && (
+                <div className="rounded-2xl border-2 border-accent/40 bg-accent/5 p-4 space-y-2">
+                  <label htmlFor="typed-total" className="block font-bold text-foreground">
+                    I didn&apos;t hear a price. What&apos;s the total?
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-black text-muted">₦</span>
+                    <input
+                      id="typed-total"
+                      type="text"
+                      inputMode="numeric"
+                      autoFocus
+                      placeholder="e.g. 9500"
+                      value={typedTotals[currentIndex] ?? ''}
+                      onChange={(e) =>
+                        setTypedTotals((prev) => ({ ...prev, [currentIndex]: e.target.value }))
+                      }
+                      className="flex-1 min-w-0 px-4 py-3 rounded-xl bg-input-bg border border-input-border text-foreground text-xl font-black"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {warnings.length > 0 && (
+                <div role="alert" className="rounded-2xl border border-accent/30 bg-accent/10 p-4 space-y-2">
+                  {warnings.map((warning) => (
+                    <p key={warning} className="flex gap-2 text-sm font-bold text-accent">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-none" />
+                      <span>{warning}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {typeof currentTx.balance_after === 'number' && !needsPrice && (
+                <p className="text-sm font-bold text-muted">
+                  {currentTx.resolvedCustomer.name} owes {formatCurrency(currentTx.current_balance ?? 0)} now
+                  {' '}→ {currentTx.balance_after < 0
+                    ? `${formatCurrency(-currentTx.balance_after)} in credit`
+                    : formatCurrency(currentTx.balance_after)}{' '}
+                  after this
+                </p>
+              )}
+
               <div className="bg-foreground p-6 rounded-[32px] flex justify-between items-center shadow-lg">
                 <p className="font-bold text-background uppercase text-[10px] tracking-[0.2em] opacity-60">Total Value</p>
                 <p className="text-3xl font-black text-background font-syne">
-                  {formatCurrency(currentTx.total_amount)}
+                  {formatCurrency(shownTotal)}
                 </p>
               </div>
             </div>
@@ -169,10 +231,11 @@ export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdi
                 size="xl" 
                 onClick={() => handleNext()} 
                 isLoading={isLoading}
+                disabled={priceMissing}
                 className="w-full mt-4 bg-success hover:bg-success/90 shadow-xl shadow-success/20"
               >
-                {!isLoading && <Check className="w-7 h-7 mr-2" />} 
-                {isLast ? 'Confirm & Save' : 'Next Entry'}
+                {!isLoading && !priceMissing && <Check className="w-7 h-7 mr-2" />} 
+                {priceMissing ? 'Type the total first' : isLast ? 'Confirm & Save' : 'Next Entry'}
               </Button>
             )}
           </div>

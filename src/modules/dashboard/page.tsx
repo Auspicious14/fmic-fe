@@ -179,7 +179,7 @@ export default function DashboardPage() {
 
   // Confirm transaction
   const handleConfirm = useCallback(
-    async (index: number, overrideCustomerId?: string) => {
+    async (index: number, overrideCustomerId?: string, amountOverride?: number) => {
       if (!interpretation) return;
       const tx = interpretation.transactions[index];
       const ttsLang = interpretation.detectedLanguage === "yo" ? "yo-NG" : "pcm-NG";
@@ -194,6 +194,13 @@ export default function DashboardPage() {
           setShowPreview(false);
           setConfirmedTransactions([]);
         }
+        return;
+      }
+
+      // A credit sale must never be saved at ₦0.
+      const amount = amountOverride ?? tx.amount;
+      if (tx.intent === "CREDIT_SALE" && !(Number(amount) > 0)) {
+        toast.error("Type the total before saving this sale.");
         return;
       }
 
@@ -222,7 +229,7 @@ export default function DashboardPage() {
             quantity: item.quantity,
             unitPriceAtSale: item.unit_price,
           })),
-          amount: tx.amount,
+          amount,
           type: tx.transaction_type,
           voiceTranscript: tx.reasoning_summary,
           idempotencyKey: crypto.randomUUID(),
