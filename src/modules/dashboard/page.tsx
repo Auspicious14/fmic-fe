@@ -9,7 +9,7 @@ import { useVoiceCapture, type VoiceResult } from "@/modules/voice/hooks/useVoic
 import { SummaryCards } from "./components/SummaryCards";
 import { RecentActivity } from "./components/RecentActivity";
 import { VoiceButton } from "./components/VoiceButton";
-import { InterpretationPreview } from "@/modules/voice/components/InterpretationPreview";
+import { InterpretationPreview, NEW_CUSTOMER } from "@/modules/voice/components/InterpretationPreview";
 import { BottomNav } from "@/components/ui/BottomNav";
 import apiClient from "@/shared/lib/api-client";
 import { todayLabel, cn } from "@/shared/lib/utils";
@@ -200,9 +200,13 @@ export default function DashboardPage() {
       setIsConfirming(true);
       try {
         const resolvedCustomer = tx.resolvedCustomer;
-        let finalCustomerId = overrideCustomerId ?? resolvedCustomer.customerId;
+        // From "Did you mean?": the trader said it's a different, new customer.
+        const wantsNewCustomer = overrideCustomerId === NEW_CUSTOMER;
+        let finalCustomerId = wantsNewCustomer
+          ? undefined
+          : overrideCustomerId ?? resolvedCustomer.customerId;
 
-        if (resolvedCustomer.isNew && !finalCustomerId) {
+        if ((resolvedCustomer.isNew || wantsNewCustomer) && !finalCustomerId) {
           const r = await apiClient.post("/customers", {
             name: resolvedCustomer.name,
             tag: resolvedCustomer.tag,

@@ -7,6 +7,9 @@ import { formatCurrency } from '@/shared/lib/utils';
 import { Check, X, User, ShoppingBag, CreditCard, AlertCircle, UserPlus, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/** Passed to onConfirm when the trader says the heard name is a new customer. */
+export const NEW_CUSTOMER = "__new_customer__";
+
 interface InterpretationPreviewProps {
   data: any; // VoiceOutputDto containing transactions array
   isOpen: boolean;
@@ -90,6 +93,14 @@ export function InterpretationPreview({ data, isOpen, onConfirm, onCancel, onEdi
                           <Check className="w-4 h-4 text-success opacity-0 group-hover:opacity-100" />
                         </button>
                       ))}
+                      <button
+                        onClick={() => handleNext(NEW_CUSTOMER)}
+                        className="w-full text-left p-3 rounded-xl border-2 border-dashed border-border hover:border-accent hover:bg-accent/5 transition-all"
+                      >
+                        <span className="font-bold text-foreground">
+                          No, add &quot;{currentTx.resolvedCustomer.name}&quot; as a new customer
+                        </span>
+                      </button>
                     </div>
                   )}
                 </div>
